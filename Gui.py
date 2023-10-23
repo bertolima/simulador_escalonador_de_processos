@@ -9,6 +9,9 @@ class Gui(Tk):
         self.root = None
         self.feet = None
         self.test()
+
+        #mainloop
+        super().mainloop()
         
     def test(self):
         mainframe = ttk.Frame(self.root, padding="3 3 12 12")
@@ -42,7 +45,6 @@ class Gui(Tk):
         except ValueError:
             pass
     
-    def loop(self):
-        super().mainloop()
+        
 
         
