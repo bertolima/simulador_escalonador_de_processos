@@ -10,21 +10,19 @@ class Processo:
         self.tempoTotal = 0
 
         self.tempoExecVar = tempoExec
-        self.ended = False
+
     
     def isEnded(self):
-        return self.ended
+        if (self.tempoExecVar <= 0):
+            return True
+        return False
     
     def acumular(self):
         self.tempoTotal += 1
 
-    def FIFO(self):
-        if (self.tempoExecVar > 0):
-            self.tempoExecVar -= 1
-            self.tempoTotal += 1
-
-            if(self.tempoExecVar == 0):
-                self.ended = True
+    def executar(self):
+        self.tempoExecVar -= 1
+        self.tempoTotal += 1
     
     def getTempoChegada(self):
         return self.tempoChegada

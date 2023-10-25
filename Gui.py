@@ -14,7 +14,7 @@ class Gui(Tk):
         super().mainloop()
         
     def test(self):
-        mainframe = ttk.Frame(self.root, padding="3 3 12 12")
+        mainframe = ttk.Frame(self, padding="3 3 12 12")
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         super().columnconfigure(0, weight=1)
         super().rowconfigure(0, weight=1)
