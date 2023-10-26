@@ -1,3 +1,4 @@
-from Gui import Gui
+from Simulador import Simulador
 
-gui = Gui()
+simulador = Simulador()
+simulador.mainloop()
