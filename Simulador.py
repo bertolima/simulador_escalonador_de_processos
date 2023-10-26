@@ -1,19 +1,78 @@
 from Processo import Processo
+from tkinter import *
+from tkinter import ttk
 import time
 from collections import deque
 
-class Simulador:
+
+
+class Simulador(Tk):
     def __init__(self, quantum = None, sobrecarga = None):
+        super().__init__()
+        super().geometry("800x800")
+        super().title("Escalonador de processos")
         self.quantum = quantum
         self.sobrecarga = sobrecarga
         self.processos:deque[Processo] = deque()
         self.ended = []
         self.turnaround = 0
         self.time = 0
+        self.test()
+
+    def criarProcesso(self):
+        
+        newWindow = Toplevel(self)
+        newWindow.title(" Janela de Criação de Processo")
+        def submit():
+            tempoExec = int(exec_entry.get())
+            tempoCheg = int(chegada_entry.get())
+            prio = int(deadline_entry.get())
+            dead = int(prioridade_entry.get())
+            pag = int(pagina_entry.get())
+
+            self.processos.append(Processo(tempoCheg, tempoExec, prio, dead, pag))
+            newWindow.destroy()
+        
     
-    def criarProcesso(self, tempoChegada:int, tempoExec:int, deadline:int, prioridade:int, paginas:int):
-        self.processos.append(Processo(tempoChegada, tempoExec, deadline, prioridade, paginas))
+        exec_label = Label(newWindow, text= "Tempo de Execução: ").grid(row=1,column=1)
+        exec_entry = Entry(newWindow, width=5)
+        exec_entry.grid(row=1,column=2)
+
+        chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").grid(row=2,column=1)
+        chegada_entry = ttk.Entry(newWindow, width=5)
+        chegada_entry.grid(row=2,column=2)
+
+        deadline_label = ttk.Label(newWindow, text= "Deadline: ").grid(row=3,column=1)
+        deadline_entry = ttk.Entry(newWindow, width=5)
+        deadline_entry.grid(row=3,column=2)
+
+        prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").grid(row=4,column=1)
+        prioridade_entry = ttk.Entry(newWindow, width=5)
+        prioridade_entry.grid(row=4,column=2)
+
+        pagina_label = ttk.Label(newWindow, text= "Número de Páginas: ").grid(row=5,column=1)
+        pagina_entry = ttk.Entry(newWindow, width=5)
+        pagina_entry.grid(row=5,column=2)
+
+        
+
+        submit_button = ttk.Button(newWindow, text="Criar Processo", command=submit).grid(row=6,column=2)
+
+        
+        
     
+
+        
+        
+        
+    
+
+
+    def test(self):
+    
+        btn = Button(self, text ="Criar Processo", command = self.criarProcesso)
+        btn.grid(row=1,column=1)
+
     def restart(self):
         for elem in reversed(self.ended):
             elem.restart()
@@ -136,20 +195,3 @@ class Simulador:
 
 
 
-        
-
-
-
-
-        
-        
-
-
-simulador = Simulador(2,1)
-simulador.criarProcesso(0, 4, 7, 2, 10)
-simulador.criarProcesso(2, 2, 5, 2, 10)
-simulador.criarProcesso(4, 1, 8, 2, 10)
-simulador.criarProcesso(6, 3, 10, 2, 10)
-
-
-simulador.SJF()
