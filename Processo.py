@@ -1,4 +1,5 @@
-
+from tkinter import *
+from tkinter import ttk
 
 class Processo:
     def __init__(self, tempoChegada:int, tempoExec:int, deadline:int, prioridade:int, paginas:int):
@@ -8,8 +9,14 @@ class Processo:
         self.prioridade = prioridade
         self.paginas = paginas
         self.tempoTotal = 0
-
         self.tempoExecVar = tempoExec
+        self.frame = None
+        self.labels:list[ttk.Label] = []
+    
+    def createLabel(self, target):
+        target.insert("", "end", values=(0,self.tempoChegada, self.tempoExec, self.prioridade, self.deadline, self.paginas))
+        
+        
 
     
     def isEnded(self):

@@ -9,7 +9,7 @@ from collections import deque
 class Simulador(Tk):
     def __init__(self, quantum = None, sobrecarga = None):
         super().__init__()
-        super().geometry("800x800")
+        super().geometry("700x250")
         super().title("Escalonador de processos")
         self.quantum = quantum
         self.sobrecarga = sobrecarga
@@ -17,7 +17,82 @@ class Simulador(Tk):
         self.ended = []
         self.turnaround = 0
         self.time = 0
-        self.test()
+        self.processTree = None
+        self.box = None
+        self.butttons = []
+        self.initWidgets()
+
+      
+    def initWidgets(self):
+        self.createTreeWidget()
+        self.createBoxWidget()
+        self.createButtonsWidget()
+        self.createTextBoxWidget()
+
+    def createTreeWidget(self):
+        self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings")
+        self.processTree.column("id", minwidth=0, width=30)
+        self.processTree.column("chegada", minwidth=0, width=120)
+        self.processTree.column("exec", minwidth=0, width=120)
+        self.processTree.column("prio", minwidth=0, width=100)
+        self.processTree.column("deadline", minwidth=0, width=100)
+        self.processTree.column("paginas", minwidth=0, width=100)
+        self.processTree.heading("id", text="ID")
+        self.processTree.heading("chegada", text="Tempo de Chegada")
+        self.processTree.heading("exec", text="Tempo de Execução")
+        self.processTree.heading("prio", text="Prioridade")
+        self.processTree.heading("deadline", text="Deadline")
+        self.processTree.heading("paginas", text="N Paginas")
+        self.processTree.place(x=10,y=10)
+
+    def createBoxWidget(self):
+        Label(self, text="Algoritmos").place(x=608,y=160)
+        algoritmos = ["FIFO", "RoundRobin", "SJF", "EDF"]
+        self.box = ttk.Combobox(self, values=algoritmos)
+        self.box.place(x=595,y=180, width=95)
+
+    def createButtonsWidget(self):
+        Button(self, text ="START", relief="raised").place(x=595, y=210, width=95)
+        Button(self, text ="Criar Processo", relief="raised").place(x=595, y=10, width=95)
+        Button(self, text ="Deletar Processo", relief="raised").place(x=595, y=45, width=95)
+
+    def createTextBoxWidget(self):
+        chegada_label = ttk.Label(self, text= "Quantum").place(x=612, y=75, width=95)
+        chegada_entry = ttk.Entry(self, width=5)
+        chegada_entry.place(x=595, y=95, width=95)
+
+        exec_label = Label(self, text= "Sobrecarga").place(x=593, y=115, width=95)
+        exec_entry = Entry(self, width=5)
+        exec_entry.place(x=595, y=135, width=95)
+
+        
+
+
+    def test(self):
+        
+        btn = Button(self, text ="Criar Processo", command = self.criarProcesso)
+        btn.pack()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def criarProcesso(self):
         
@@ -30,7 +105,9 @@ class Simulador(Tk):
             dead = int(prioridade_entry.get())
             pag = int(pagina_entry.get())
 
-            self.processos.append(Processo(tempoCheg, tempoExec, prio, dead, pag))
+            processo = Processo(tempoCheg, tempoExec, prio, dead, pag)
+            processo.createLabel(self.processTree)
+            self.processos.append()
             newWindow.destroy()
         
     
@@ -54,24 +131,50 @@ class Simulador(Tk):
         pagina_entry = ttk.Entry(newWindow, width=5)
         pagina_entry.grid(row=5,column=2)
 
-        
-
+    
         submit_button = ttk.Button(newWindow, text="Criar Processo", command=submit).grid(row=6,column=2)
 
-        
-        
-    
-
-        
-        
-        
-    
 
 
-    def test(self):
-    
-        btn = Button(self, text ="Criar Processo", command = self.criarProcesso)
-        btn.grid(row=1,column=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def restart(self):
         for elem in reversed(self.ended):
