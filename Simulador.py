@@ -7,19 +7,28 @@ from collections import deque
 
 
 class Simulador(Tk):
-    def __init__(self, quantum = None, sobrecarga = None):
+    def __init__(self):
         super().__init__()
         super().geometry("700x250")
         super().title("Escalonador de processos")
-        self.quantum = quantum
-        self.sobrecarga = sobrecarga
+
+        self.quantum = None
+        self.sobrecarga = None
+        self.quantum_entry = None
+        self.sobrecarga_entry = None
         self.processos:deque[Processo] = deque()
+        self.processos.append(Processo(0, 0, 4, 1, 1, 1))
+        self.processos.append(Processo(1, 2, 2, 1, 1, 1))
+        self.processos.append(Processo(2, 4,1, 1, 1,1))
+        self.processos.append(Processo(3, 6, 3, 1, 1, 1))
         self.ended = []
         self.turnaround = 0
         self.time = 0
         self.processTree = None
         self.box = None
         self.butttons = []
+        self.id = 0
+        self.canRun = False
         self.initWidgets()
 
       
@@ -42,7 +51,7 @@ class Simulador(Tk):
         self.processTree.heading("exec", text="Tempo de Execução")
         self.processTree.heading("prio", text="Prioridade")
         self.processTree.heading("deadline", text="Deadline")
-        self.processTree.heading("paginas", text="N Paginas")
+        self.processTree.heading("paginas", text="Nº Paginas")
         self.processTree.place(x=10,y=10)
 
     def createBoxWidget(self):
@@ -52,43 +61,58 @@ class Simulador(Tk):
         self.box.place(x=595,y=180, width=95)
 
     def createButtonsWidget(self):
-        Button(self, text ="START", relief="raised").place(x=595, y=210, width=95)
-        Button(self, text ="Criar Processo", relief="raised").place(x=595, y=10, width=95)
-        Button(self, text ="Deletar Processo", relief="raised").place(x=595, y=45, width=95)
+        Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=210, width=95)
+        Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=595, y=10, width=95)
+        Button(self, text ="Deletar Processo", relief="raised",command=self.deleteProcess).place(x=595, y=45, width=95)
 
     def createTextBoxWidget(self):
         chegada_label = ttk.Label(self, text= "Quantum").place(x=612, y=75, width=95)
-        chegada_entry = ttk.Entry(self, width=5)
-        chegada_entry.place(x=595, y=95, width=95)
+        self.quantum_entry = ttk.Entry(self, width=5)
+        self.quantum_entry.place(x=595, y=95, width=95)
 
         exec_label = Label(self, text= "Sobrecarga").place(x=593, y=115, width=95)
-        exec_entry = Entry(self, width=5)
-        exec_entry.place(x=595, y=135, width=95)
+        self.sobrecarga_entry = Entry(self, width=5)
+        self.sobrecarga_entry.place(x=595, y=135, width=95)
+
+    def deleteProcess(self):
+        selected = self.processTree.selection()
+        print(selected)
+        self.processTree.delete(selected)
+
+
+    def startAction(self):
+        def getEntry():
+            self.quantum = int(self.quantum_entry.get())
+            self.sobrecarga = int(self.sobrecarga_entry.get())
+        
+        def createNewWindow(size):
+            newWindow = Toplevel(self)
+            newWindow.title(" Visualização")
+            Label(newWindow, text= "PROCESSOS").grid(row=0, column=0, padx=10, pady=10)
+            
+            for i in range(max_time):
+                Label(newWindow,text=str(i+1), relief="groove").grid(row=0, column=i+1, ipadx=10)
+
+            self.restart()
+
+            for i in range(len(self.processos)):
+                Label(newWindow, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=2)
 
         
+        getEntry()
 
+        max_time = self.FIFO()
+        self.canRun = True
 
-    def test(self):
-        
-        btn = Button(self, text ="Criar Processo", command = self.criarProcesso)
-        btn.pack()
+        createNewWindow(max_time)
 
+            
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        action = self.box.get()
+        if(action == "FIFO"): self.FIFO()
+        elif(action == "SJF"): self.SJF()
+        elif(action == "RoundRobin"): self.RoundRobin()
+        elif(action == "EDF"): self.EDF()
 
 
 
@@ -98,6 +122,8 @@ class Simulador(Tk):
         
         newWindow = Toplevel(self)
         newWindow.title(" Janela de Criação de Processo")
+        newWindow.geometry("180x175")
+
         def submit():
             tempoExec = int(exec_entry.get())
             tempoCheg = int(chegada_entry.get())
@@ -105,34 +131,39 @@ class Simulador(Tk):
             dead = int(prioridade_entry.get())
             pag = int(pagina_entry.get())
 
-            processo = Processo(tempoCheg, tempoExec, prio, dead, pag)
+            processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag)
+            self.id +=1
             processo.createLabel(self.processTree)
-            self.processos.append()
+            self.processos.append(processo)
+            newWindow.destroy()
+        
+        def cancel():
             newWindow.destroy()
         
     
-        exec_label = Label(newWindow, text= "Tempo de Execução: ").grid(row=1,column=1)
+        exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
         exec_entry = Entry(newWindow, width=5)
-        exec_entry.grid(row=1,column=2)
+        exec_entry.place(x=130,y=10)
 
-        chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").grid(row=2,column=1)
+        chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
         chegada_entry = ttk.Entry(newWindow, width=5)
-        chegada_entry.grid(row=2,column=2)
+        chegada_entry.place(x=130,y=35)
 
-        deadline_label = ttk.Label(newWindow, text= "Deadline: ").grid(row=3,column=1)
+        deadline_label = ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
         deadline_entry = ttk.Entry(newWindow, width=5)
-        deadline_entry.grid(row=3,column=2)
+        deadline_entry.place(x=130,y=60)
 
-        prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").grid(row=4,column=1)
+        prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
         prioridade_entry = ttk.Entry(newWindow, width=5)
-        prioridade_entry.grid(row=4,column=2)
+        prioridade_entry.place(x=130,y=85)
 
-        pagina_label = ttk.Label(newWindow, text= "Número de Páginas: ").grid(row=5,column=1)
+        pagina_label = ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
         pagina_entry = ttk.Entry(newWindow, width=5)
-        pagina_entry.grid(row=5,column=2)
+        pagina_entry.place(x=130,y=110)
 
     
-        submit_button = ttk.Button(newWindow, text="Criar Processo", command=submit).grid(row=6,column=2)
+        submit_button = ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
+        submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
 
 
 
@@ -184,23 +215,14 @@ class Simulador(Tk):
         self.ended.clear()
     
     def FIFO(self):
-        while(len(self.processos) > 0):
-            for processo in self.processos:
-                if (processo.getTempoChegada() <= self.time):
-                    current = self.processos.popleft()
-                    break
-
-            while(not current.isEnded()):
-                current.executar()
-                for elem in self.processos:
-                    if (elem.getTempoChegada() <= self.time):
-                        elem.acumular()
-                self.time +=1
-            self.turnaround += current.getTempoTotal()
-            self.ended.append(current)
+        process_queue = self.processos
+        process_fineshed = deque()
+        time = 0
         
-        self.turnaround /= len(self.ended)
-        print(self.turnaround)
+        if(self.processos):
+            current = self.processos.popleft()
+        else:
+            time +=1
     
     def RoundRobin(self):
         processQueue:deque[Processo] = deque()
