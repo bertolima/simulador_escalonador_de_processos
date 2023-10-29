@@ -1,4 +1,5 @@
 from Processo import Processo
+import tkinter as tk
 from tkinter import *
 from tkinter import ttk
 import time
@@ -9,18 +10,20 @@ from collections import deque
 class Simulador(Tk):
     def __init__(self):
         super().__init__()
-        super().geometry("700x250")
-        super().title("Escalonador de processos")
+        self.geometry("700x250")
+        self.title("Escalonador de processos")
 
         self.quantum = None
         self.sobrecarga = None
         self.quantum_entry = None
         self.sobrecarga_entry = None
+
         self.processos:deque[Processo] = deque()
         self.processos.append(Processo(0, 0, 4, 1, 1, 1))
         self.processos.append(Processo(1, 2, 2, 1, 1, 1))
         self.processos.append(Processo(2, 4,1, 1, 1,1))
         self.processos.append(Processo(3, 6, 3, 1, 1, 1))
+        
         self.processWindow = None
         self.ended = []
         self.turnaround = 0
@@ -211,11 +214,9 @@ class Simulador(Tk):
 
 
     def restart(self):
-        for elem in reversed(self.ended):
+        for elem in self.processos:
             elem.restart()
-            self.processos.append(elem)
-        
-        self.ended.clear()
+            
 
     def verificarProcesso(self, processList:list[Processo], time):
         aux = deque()
@@ -262,9 +263,8 @@ class Simulador(Tk):
             if (current):
                 process_queue.remove(current)
                 while(not current.isEnded()):
-                    current.executar()
-                    [process.acumular() for process in process_queue if process.getTempoChegada() <= time]
-                    ttk.Label(self, background="green").grid(row=current.id+1, column=time+1)
+                    current.executar(self.processWindow, time)
+                    [process.acumular(self.processWindow, time) for process in process_queue if process.getTempoChegada() <= time]
                     time +=1
             else:
                 time += 1

@@ -23,16 +23,23 @@ class Processo:
             return True
         return False
     
-    def sobrecarga(self, window):
+    def sobrecarga(self, window, time):
         self.tempoTotal +=1
+        if(window):
+            Label(window, background="red").grid(row=self.id+1, column=time+1, ipadx=11, ipady=5)
+
     
-    def acumular(self):
+    def acumular(self, window=None, time=None):
         self.tempoTotal += 1
+        if (window):
+            Label(window, background="yellow").grid(row=self.id+1, column=time+1, ipadx=11, ipady=5)
             
 
-    def executar(self):
+    def executar(self, window=None, time=None):
         self.tempoExecVar -= 1
         self.tempoTotal += 1
+        if(window):
+            Label(window, background="green").grid(row=self.id+1, column=time+1, ipadx=11, ipady=5)
     
     def restart(self):
         self.tempoExecVar = self.tempoExec
