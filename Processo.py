@@ -23,8 +23,12 @@ class Processo:
             return True
         return False
     
+    def sobrecarga(self, window):
+        self.tempoTotal +=1
+    
     def acumular(self):
         self.tempoTotal += 1
+            
 
     def executar(self):
         self.tempoExecVar -= 1

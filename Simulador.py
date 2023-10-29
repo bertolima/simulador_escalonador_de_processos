@@ -21,6 +21,7 @@ class Simulador(Tk):
         self.processos.append(Processo(1, 2, 2, 1, 1, 1))
         self.processos.append(Processo(2, 4,1, 1, 1,1))
         self.processos.append(Processo(3, 6, 3, 1, 1, 1))
+        self.processWindow = None
         self.ended = []
         self.turnaround = 0
         self.time = 0
@@ -86,33 +87,35 @@ class Simulador(Tk):
             self.sobrecarga = int(self.sobrecarga_entry.get())
         
         def createNewWindow(size):
-            newWindow = Toplevel(self)
-            newWindow.title(" Visualização")
-            Label(newWindow, text= "PROCESSOS").grid(row=0, column=0, padx=10, pady=10)
+            self.processWindow = Toplevel(self)
+            self.processWindow.title(" Visualização")
             
-            for i in range(max_time):
-                Label(newWindow,text=str(i+1), relief="groove").grid(row=0, column=i+1, ipadx=10)
+            for i in range (max_time):
+                Label(self.processWindow,text=str(i), relief="groove").grid(row=0, column=i+1, ipadx=10, ipady=5)
 
             self.restart()
 
             for i in range(len(self.processos)):
-                Label(newWindow, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=2)
+                Label(self.processWindow, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=1)
+
+            self.FIFO()
+    
 
         
         getEntry()
 
-        max_time = self.FIFO()
+        max_time = self.calcularTempo()
         self.canRun = True
 
         createNewWindow(max_time)
 
             
 
-        action = self.box.get()
-        if(action == "FIFO"): self.FIFO()
-        elif(action == "SJF"): self.SJF()
-        elif(action == "RoundRobin"): self.RoundRobin()
-        elif(action == "EDF"): self.EDF()
+        # action = self.box.get()
+        # if(action == "FIFO"): self.FIFO(self.processWindow)
+        # elif(action == "SJF"): self.SJF()
+        # elif(action == "RoundRobin"): self.RoundRobin()
+        # elif(action == "EDF"): self.EDF()
 
 
 
@@ -213,16 +216,61 @@ class Simulador(Tk):
             self.processos.append(elem)
         
         self.ended.clear()
-    
-    def FIFO(self):
-        process_queue = self.processos
-        process_fineshed = deque()
-        time = 0
+
+    def verificarProcesso(self, processList:list[Processo], time):
+        aux = deque()
+        for process in processList:
+            if(process.getTempoChegada() == time):
+                aux.appendleft(process)
+        for process in aux:
+            if(processList.count(process) > 0):
+                processList.remove(process)
         
-        if(self.processos):
-            current = self.processos.popleft()
-        else:
-            time +=1
+        return aux
+
+    def calcularTempo(self):
+        process_queue = deque(self.processos)
+        time = 0
+
+        while (process_queue):
+            current = None
+            for process in process_queue:
+                if (process.getTempoChegada()<= time):
+                    current = process
+                    break
+            if (current):
+                process_queue.remove(current)
+                while(not current.isEnded()):
+                    current.executar()
+                    [process.acumular() for process in process_queue if process.getTempoChegada() <= time]
+                    time +=1
+            else:
+                time += 1
+        return time
+
+
+    def FIFO(self):
+        process_queue = deque(self.processos)
+        time = 0
+
+        while (process_queue):
+            current = None
+            for process in process_queue:
+                if (process.getTempoChegada()<= time):
+                    current = process
+                    break
+            if (current):
+                process_queue.remove(current)
+                while(not current.isEnded()):
+                    current.executar()
+                    [process.acumular() for process in process_queue if process.getTempoChegada() <= time]
+                    ttk.Label(self, background="green").grid(row=current.id+1, column=time+1)
+                    time +=1
+            else:
+                time += 1
+        return time
+
+        
     
     def RoundRobin(self):
         processQueue:deque[Processo] = deque()
