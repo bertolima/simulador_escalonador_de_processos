@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import ttk
 import time
 from collections import deque
+from Processador import Processador
 
 
 
@@ -17,6 +18,7 @@ class Simulador(Tk):
         self.sobrecarga = None
         self.quantum_entry = None
         self.sobrecarga_entry = None
+        self.cpu = Processador()
 
         self.processos:deque[Processo] = deque()
         self.processos.append(Processo(0, 0, 4, 1, 1, 1))
@@ -85,6 +87,9 @@ class Simulador(Tk):
 
 
     def startAction(self):
+
+        for processo in self.processos:
+            processo.restart()
         def getEntry():
             self.quantum = int(self.quantum_entry.get())
             self.sobrecarga = int(self.sobrecarga_entry.get())
@@ -94,34 +99,39 @@ class Simulador(Tk):
             self.processWindow.title(" Visualização")
             
             for i in range (max_time):
-                Label(self.processWindow,text=str(i), relief="groove").grid(row=0, column=i+1, ipadx=10, ipady=5)
+                Label(self.processWindow,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5)
 
             self.restart()
 
             for i in range(len(self.processos)):
                 Label(self.processWindow, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=1)
 
-            self.FIFO()
-    
-
+            
         
         getEntry()
 
-        max_time = self.calcularTempo()
-        self.canRun = True
 
-        createNewWindow(max_time)
-
-            
-
-        # action = self.box.get()
-        # if(action == "FIFO"): self.FIFO(self.processWindow)
-        # elif(action == "SJF"): self.SJF()
-        # elif(action == "RoundRobin"): self.RoundRobin()
-        # elif(action == "EDF"): self.EDF()
-
-
-
+        action = self.box.get()
+        if(action == "FIFO"):
+            max_time = self.FIFO(True)
+            self.canRun = True
+            createNewWindow(max_time)
+            self.FIFO()
+        elif(action == "SJF"):
+            max_time = self.SJF(True)
+            self.canRun = True
+            createNewWindow(max_time)
+            self.SJF()
+        elif(action == "RoundRobin"):
+            max_time = self.RoundRobin(True)
+            self.canRun = True
+            createNewWindow(max_time)
+            self.RoundRobin()
+        elif(action == "EDF"):
+            max_time = self.EDF(True)
+            self.canRun = True
+            createNewWindow(max_time)
+            self.EDF()
 
 
     def criarProcesso(self):
@@ -172,196 +182,78 @@ class Simulador(Tk):
         submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def restart(self):
         for elem in self.processos:
             elem.restart()
             
 
-    def verificarProcesso(self, processList:list[Processo], time):
-        aux = deque()
-        for process in processList:
-            if(process.getTempoChegada() == time):
-                aux.appendleft(process)
-        for process in aux:
-            if(processList.count(process) > 0):
-                processList.remove(process)
-        
-        return aux
-
-    def calcularTempo(self):
-        process_queue = deque(self.processos)
-        time = 0
-
-        while (process_queue):
-            current = None
-            for process in process_queue:
-                if (process.getTempoChegada()<= time):
-                    current = process
-                    break
-            if (current):
-                process_queue.remove(current)
-                while(not current.isEnded()):
-                    current.executar()
-                    [process.acumular() for process in process_queue if process.getTempoChegada() <= time]
-                    time +=1
-            else:
-                time += 1
-        return time
-
-
-    def FIFO(self):
-        process_queue = deque(self.processos)
-        time = 0
-
-        while (process_queue):
-            current = None
-            for process in process_queue:
-                if (process.getTempoChegada()<= time):
-                    current = process
-                    break
-            if (current):
-                process_queue.remove(current)
-                while(not current.isEnded()):
-                    current.executar(self.processWindow, time)
-                    [process.acumular(self.processWindow, time) for process in process_queue if process.getTempoChegada() <= time]
-                    time +=1
-            else:
-                time += 1
-        return time
-
-        
-    
-    def RoundRobin(self):
-        processQueue:deque[Processo] = deque()
-        
-        def acumular():
-            for processo in processQueue:
-                processo.acumular()
-
-        def verificarProcessos():
-            for i in range (len(self.processos)):
-                if (self.processos[i].getTempoChegada() == self.time):
-                    processQueue.append(self.processos[i])
-
-            for processo in processQueue:
-                if (self.processos.count(processo) > 0):
-                    self.processos.remove(processo)
-
-        while(len(self.processos) > 0 or len(processQueue)):
-            verificarProcessos()
-            if(len(processQueue) > 0):
-                current = processQueue.popleft()
-                currentTime = self.quantum
-
-                while(currentTime > 0 and not current.isEnded()):
-                    current.executar()
-                    acumular()
-                    self.time +=1
-                    currentTime-=1
-                    verificarProcessos()
-                
-                if (current.isEnded()):
-                    self.turnaround += current.getTempoTotal()
-                    self.ended.append(current)
-                    print(current.getTempoTotal())
+    def FIFO(self, calculo = False):
+        if (not calculo):
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
                 else:
-                    current.setTempoTotal(current.getTempoTotal() + self.sobrecarga)
-                    acumular()
-                    self.time +=1
-                    processQueue.append(current)
-
-            else:
-                self.time+=1
+                    self.cpu.chooseProcess()
+                    self.cpu.startProcess(mode= "FIFO", target = self.processWindow)
+        else:
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess()
+                    self.cpu.calculateProcess(mode= "FIFO",)
+            return self.cpu.getTime()
         
-        self.turnaround /= len(self.ended)
-        print(self.turnaround)
 
-    def SJF(self):
-        processQueue:deque[Processo] = deque()
-        
-        def acumular():
-            for processo in processQueue:
-                processo.acumular()
-
-        def verificarProcessos():
-            for i in range (len(self.processos)):
-                if (self.processos[i].getTempoChegada() == self.time):
-                    processQueue.append(self.processos[i])
-
-            for processo in processQueue:
-                if (self.processos.count(processo) > 0):
-                    self.processos.remove(processo)
-        
-        def chooseMin():
-            current = None
-            i = 1000000000000000
-            for j in range(len(processQueue)):
-                if(processQueue[j].getTempoExec() < i ):
-                    i = processQueue[j].getTempoExec()
+    def RoundRobin(self, calculo = False):
+        if (not calculo):
+            turnaround = 0
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess()
+                    a = self.cpu.startProcess(mode= "RR", target=self.processWindow, quantum=self.quantum, sobrecarga=self.sobrecarga)
+                    if (a is not None):
+                        turnaround += a
+            print(turnaround/len(self.processos))
+        else:
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess()
+                    self.cpu.calculateProcess(mode= "RR", quantum=self.quantum, sobrecarga=self.sobrecarga)
+            return self.cpu.getTime()
             
-            current = processQueue[j]
-            processQueue.remove(current)
-            return current
-            
+        
+        
 
-        while(len(self.processos) > 0 or len(processQueue)):
-            verificarProcessos()
-            if(len(processQueue) > 0):
-                current = chooseMin()
+    def SJF(self, calculo = False):
+        if (not calculo):
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess(lower=True)
+                    self.cpu.startProcess(mode= "SJF", target=self.processWindow, quantum=self.quantum, sobrecarga=self.sobrecarga)
+        else:
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess(lower=True)
+                    self.cpu.calculateProcess(mode= "SJF", quantum=self.quantum, sobrecarga=self.sobrecarga)
+            return self.cpu.getTime()
+        
 
-                while(not current.isEnded()):
-                    current.executar()
-                    acumular()
-                    self.time +=1
-                    verificarProcessos()
-                
-                self.turnaround += current.getTempoTotal()
-                self.ended.append(current)
-            else:
-                self.time+=1
-
-    def EDF(self):
+    def EDF(self, calculo = False):
         pass
 
         
