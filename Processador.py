@@ -58,7 +58,6 @@ class Processador:
                     target.after(700)
                     self.time += 1
                     self.checkProcessQueue()
-                value += self.currentProcess.getTempoTotal()
                 self.currentProcess = None
 
             elif(mode == "RR"):
