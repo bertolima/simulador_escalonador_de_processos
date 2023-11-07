@@ -21,21 +21,17 @@ class Simulador(Tk):
         self.cpu = Processador()
 
         self.processos:deque[Processo] = deque()
-        self.processos.append(Processo(0, 0, 4, 1, 1, 1))
         self.processos.append(Processo(1, 2, 2, 1, 1, 1))
         self.processos.append(Processo(2, 4,1, 1, 1,1))
         self.processos.append(Processo(3, 6, 3, 1, 1, 1))
-        
         self.processWindow = None
-        self.ended = []
-        self.turnaround = 0
-        self.time = 0
         self.processTree = None
+        self.selected = []
+        self.processWindowFrame = None
         self.box = None
         self.butttons = []
-        self.id = 0
-        self.canRun = False
         self.initWidgets()
+        self.id = 0
 
       
     def initWidgets(self):
@@ -46,6 +42,7 @@ class Simulador(Tk):
 
     def createTreeWidget(self):
         self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings")
+        self.processTree.bind("<<TreeviewSelect>>", self.on_select)
         self.processTree.column("id", minwidth=0, width=30)
         self.processTree.column("chegada", minwidth=0, width=120)
         self.processTree.column("exec", minwidth=0, width=120)
@@ -60,6 +57,27 @@ class Simulador(Tk):
         self.processTree.heading("paginas", text="Nº Paginas")
         self.processTree.place(x=10,y=10)
 
+    def on_select(self, event):
+        self.selected = event.widget.selection()
+    
+    def print_selected(self):
+        need_delection = []
+        for idx in self.selected:
+            need_delection.append(self.processTree.item(idx)['values'][0])
+        
+        for element in need_delection:
+            selected = None
+            for process in self.processos:
+                if (process.getId() == element):
+                    selected = process
+                    break
+            if (selected is not None):
+                self.processos.remove(selected)
+                selectedVaribale = self.processTree.selection()
+                self.processTree.delete(selectedVaribale)
+
+
+
     def createBoxWidget(self):
         Label(self, text="Algoritmos").place(x=608,y=160)
         algoritmos = ["FIFO", "RoundRobin", "SJF", "EDF"]
@@ -69,7 +87,7 @@ class Simulador(Tk):
     def createButtonsWidget(self):
         Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=210, width=95)
         Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=595, y=10, width=95)
-        Button(self, text ="Deletar Processo", relief="raised",command=self.deleteProcess).place(x=595, y=45, width=95)
+        Button(self, text ="Deletar Processo", relief="raised",command=self.print_selected).place(x=595, y=45, width=95)
 
     def createTextBoxWidget(self):
         chegada_label = ttk.Label(self, text= "Quantum").place(x=612, y=75, width=95)
@@ -97,14 +115,16 @@ class Simulador(Tk):
         def createNewWindow(size):
             self.processWindow = Toplevel(self)
             self.processWindow.title(" Visualização")
+            self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
+            self.processWindowFrame.grid(row=0, column=0, padx=3, pady=3)
             
             for i in range (max_time):
-                Label(self.processWindow,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5)
+                Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
 
             self.restart()
 
             for i in range(len(self.processos)):
-                Label(self.processWindow, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=1)
+                Label(self.processWindowFrame, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
 
             
         
@@ -114,22 +134,18 @@ class Simulador(Tk):
         action = self.box.get()
         if(action == "FIFO"):
             max_time = self.FIFO(True)
-            self.canRun = True
             createNewWindow(max_time)
             self.FIFO()
         elif(action == "SJF"):
             max_time = self.SJF(True)
-            self.canRun = True
             createNewWindow(max_time)
             self.SJF()
         elif(action == "RoundRobin"):
             max_time = self.RoundRobin(True)
-            self.canRun = True
             createNewWindow(max_time)
             self.RoundRobin()
         elif(action == "EDF"):
             max_time = self.EDF(True)
-            self.canRun = True
             createNewWindow(max_time)
             self.EDF()
 
@@ -193,14 +209,16 @@ class Simulador(Tk):
             while(not self.cpu.isEnded()):
                 if(self.cpu.isQueueEmpty()):
                     self.cpu.setTime(self.cpu.getTime() + 1)
+                    self.cpu.checkProcessQueue()
                 else:
                     self.cpu.chooseProcess()
-                    self.cpu.startProcess(mode= "FIFO", target = self.processWindow)
+                    self.cpu.startProcess(mode= "FIFO", target = self.processWindowFrame)
         else:
             self.cpu.start(self.processos)
             while(not self.cpu.isEnded()):
                 if(self.cpu.isQueueEmpty()):
                     self.cpu.setTime(self.cpu.getTime() + 1)
+                    self.cpu.checkProcessQueue()
                 else:
                     self.cpu.chooseProcess()
                     self.cpu.calculateProcess(mode= "FIFO",)
@@ -216,7 +234,7 @@ class Simulador(Tk):
                     self.cpu.setTime(self.cpu.getTime() + 1)
                 else:
                     self.cpu.chooseProcess()
-                    a = self.cpu.startProcess(mode= "RR", target=self.processWindow, quantum=self.quantum, sobrecarga=self.sobrecarga)
+                    a = self.cpu.startProcess(mode= "RR", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
                     if (a is not None):
                         turnaround += a
             print(turnaround/len(self.processos))
@@ -241,7 +259,7 @@ class Simulador(Tk):
                     self.cpu.setTime(self.cpu.getTime() + 1)
                 else:
                     self.cpu.chooseProcess(lower=True)
-                    self.cpu.startProcess(mode= "SJF", target=self.processWindow, quantum=self.quantum, sobrecarga=self.sobrecarga)
+                    self.cpu.startProcess(mode= "SJF", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
         else:
             self.cpu.start(self.processos)
             while(not self.cpu.isEnded()):
@@ -254,7 +272,27 @@ class Simulador(Tk):
         
 
     def EDF(self, calculo = False):
-        pass
+        if (not calculo):
+            turnaround = 0
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess(prio=True)
+                    a = self.cpu.startProcess(mode= "EDF", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
+                    if (a is not None):
+                        turnaround += a
+            print(turnaround/len(self.processos))
+        else:
+            self.cpu.start(self.processos)
+            while(not self.cpu.isEnded()):
+                if(self.cpu.isQueueEmpty()):
+                    self.cpu.setTime(self.cpu.getTime() + 1)
+                else:
+                    self.cpu.chooseProcess(prio=True)
+                    self.cpu.calculateProcess(mode= "EDF", quantum=self.quantum, sobrecarga=self.sobrecarga)
+            return self.cpu.getTime()
 
         
 

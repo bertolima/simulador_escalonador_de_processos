@@ -10,12 +10,14 @@ class Processo:
         self.paginas = paginas
         self.tempoTotal = 0
         self.tempoExecVar = tempoExec
-        self.frame = None
-        self.labels:list[ttk.Label] = []
         self.id = identifier
+        self.labelList = []
     
     def createLabel(self, target):
         target.insert("", "end", values=(self.id,self.tempoChegada, self.tempoExec, self.prioridade, self.deadline, self.paginas))
+    
+    def getId(self):
+        return self.id
         
     
     def isEnded(self):
@@ -47,12 +49,19 @@ class Processo:
     
     def getTempoChegada(self):
         return self.tempoChegada
+    
     def getTempoExec(self):
         return self.tempoExecVar
+    
     def getDeadline(self):
         return self.deadline
+    
+    def setDeadLine(self, value):
+        self.deadline = value
+
     def getPrioridade(self):
         return self.prioridade
+    
     def getTempoTotal(self):
         return self.tempoTotal
     

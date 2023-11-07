@@ -1,5 +1,7 @@
 from collections import deque
 from Processo import Processo
+import threading
+
 class Processador:
     def __init__(self):
         self.queue:deque[Processo] = None
@@ -34,11 +36,12 @@ class Processador:
             return False
         return True
     
-    def chooseProcess(self, lower = False):
+    def chooseProcess(self, lower = False, prio = False):
         if (self.currentProcess is None and self.currentProcessQueue):
-            if (not lower):
+            if (not lower and not prio):
                 self.currentProcess = self.currentProcessQueue.popleft()
-            else:
+
+            elif(lower and not prio):
                 maxValue = float('inf')
                 for process in self.currentProcessQueue:
                     if (process.getTempoExec() < maxValue):
@@ -48,6 +51,19 @@ class Processador:
                         self.currentProcess = process
                         break
                 self.currentProcessQueue.remove(self.currentProcess)
+
+            elif(not lower and prio):
+                minValue = float('inf')
+                for process in self.currentProcessQueue:
+                    new_deadline = process.getDeadline() - process.getTempoTotal()
+                    if(new_deadline < minValue):
+                        minValue = new_deadline
+                for process in self.currentProcessQueue:
+                    if (process.getDeadline() - process.getTempoTotal() == minValue):
+                        self.currentProcess = process
+                        break
+                self.currentProcessQueue.remove(self.currentProcess)
+
 
     def startProcess(self, mode, target = None, quantum = None, sobrecarga = None):
             if (mode == "FIFO"):
@@ -85,8 +101,32 @@ class Processador:
                     ret = self.currentProcess.getTempoTotal()
                     self.currentProcess = None
                     return ret
-                    
-                
+                self.currentProcess = None
+            elif(mode == "EDF"):
+                i = sobrecarga
+                j = quantum
+                turnaround = 0
+                while(j > 0):
+                    j -= 1
+                    self.currentProcess.executar(target, self.time)
+                    [processo.acumular(target, self.time) for processo in self.currentProcessQueue]
+                    target.update()
+                    target.after(700)
+                    self.time += 1
+                    self.checkProcessQueue()
+                    if(self.currentProcess.isEnded()):
+                        break
+                if(not self.currentProcess.isEnded()):
+                    self.currentProcess.sobrecarga(target, self.time)
+                    [processo.acumular(target, self.time) for processo in self.currentProcessQueue]
+                    target.update()
+                    target.after(700)
+                    self.time +=1
+                    self.currentProcessQueue.append(self.currentProcess)
+                else:
+                    ret = self.currentProcess.getTempoTotal()
+                    self.currentProcess = None
+                    return ret
                 self.currentProcess = None
 
             elif(mode == "SJF"):
@@ -131,6 +171,23 @@ class Processador:
                 [processo.acumular(time=self.time) for processo in self.currentProcessQueue]
                 self.time += 1
                 self.checkProcessQueue()
+            self.currentProcess = None
+        elif (mode == "EDF"):
+            i = sobrecarga
+            j = quantum
+            while(j > 0):
+                j -= 1
+                self.currentProcess.executar(time=self.time)
+                [processo.acumular(time=self.time) for processo in self.currentProcessQueue]
+                self.time += 1
+                self.checkProcessQueue()
+                [processo.acumular(time=self.time) for processo in self.currentProcessQueue]
+                if(self.currentProcess.isEnded()):
+                    break
+            if(not self.currentProcess.isEnded()):
+                self.currentProcess.sobrecarga(time=self.time)
+                self.time +=1
+                self.currentProcessQueue.append(self.currentProcess)
             self.currentProcess = None
 
 
