@@ -1,52 +1,63 @@
 from tkinter import *
-from tkinter import ttk
 
 class Processo:
+
     def __init__(self, identifier, tempoChegada:int, tempoExec:int, deadline:int, prioridade:int, paginas:int):
+        #variaveis autoexplicativas
+        self.id = identifier
         self.tempoChegada = tempoChegada
         self.tempoExec = tempoExec
         self.deadline = deadline
         self.prioridade = prioridade
         self.paginas = paginas
         self.tempoTotal = 0
+
+        #aqui é o calculado o tempo restante que o processo tem a ser executado
         self.tempoExecVar = tempoExec
-        self.id = identifier
+
+        #lista de labeis para renderizar a execução do processo na tela.
         self.labelList = []
-    
+
+    #Label criado para amostragem do processo na tela.
     def createLabel(self, target):
         target.insert("", "end", values=(self.id,self.tempoChegada, self.tempoExec, self.prioridade, self.deadline, self.paginas))
+
+    #simula sobrecarga do processo em UM CLOCK
+    def sobrecarga(self,time=None):
+        self.tempoTotal +=1
+        self.labelList.append(("red", time, self.id))
+
+    #simula UM CLOCK de tempo de espera do processo
+    def acumular(self, time=None):
+        self.tempoTotal += 1
+        self.labelList.append(("yellow", time, self.id))
+            
+    #executa o processo em UM CLOCK
+    def executar(self, time=None):
+        self.tempoExecVar -= 1
+        self.tempoTotal += 1
+        self.labelList.append(("green", time, self.id))
     
-    def getId(self):
-        return self.id
-        
     
+    #checa se aquele processo já acabou
     def isEnded(self):
         if (self.tempoExecVar <= 0):
             return True
         return False
     
-    def sobrecarga(self, window=None, time=None):
-        self.tempoTotal +=1
-        if(window):
-            Label(window, background="red", relief="ridge", width=3).grid(row=self.id+1, column=time+1, ipady=5, sticky=EW)
-
-    
-    def acumular(self, window=None, time=None):
-        self.tempoTotal += 1
-        if (window):
-            Label(window, background="yellow", relief="ridge", width=3).grid(row=self.id+1, column=time+1, ipady=5, sticky=EW)
-            
-
-    def executar(self, window=None, time=None):
-        self.tempoExecVar -= 1
-        self.tempoTotal += 1
-        if(window):
-            Label(window, background="green", relief="ridge", width=3).grid(row=self.id+1, column=time+1, ipady=5, sticky=EW)
-    
+    #reinicia os status do processo
     def restart(self):
         self.tempoExecVar = self.tempoExec
         self.tempoTotal = 0
+        self.labelList.clear()
+
+    #acessors and modifiers
+    def getId(self):
+        return self.id
     
+    def getLabelList(self):
+        return self.labelList
+
     def getTempoChegada(self):
         return self.tempoChegada
     

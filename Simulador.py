@@ -1,39 +1,37 @@
 from Processo import Processo
-import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-import time
 from collections import deque
 from Processador import Processador
 
 
 
 class Simulador(Tk):
+
     def __init__(self):
         super().__init__()
         self.geometry("700x250")
         self.title("Escalonador de processos")
-
+        
+        #iniciar as variavels como None é como usar um NULLPOINTER, é interessante pra inicializar atributos de classes.
         self.quantum = None
         self.sobrecarga = None
         self.quantum_entry = None
         self.sobrecarga_entry = None
-        self.cpu = Processador()
 
-        self.processos:deque[Processo] = deque()
-        self.processos.append(Processo(1, 2, 2, 1, 1, 1))
-        self.processos.append(Processo(2, 4,1, 1, 1,1))
-        self.processos.append(Processo(3, 6, 3, 1, 1, 1))
-        self.processWindow = None
-        self.processTree = None
-        self.selected = []
-        self.processWindowFrame = None
-        self.box = None
-        self.butttons = []
-        self.initWidgets()
-        self.id = 0
+        self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
+        self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
+        
+        self.processWindow = None   #janela onde a execução dos processos será mostrada
+        self.processTree = None     #arvore de exibição dos processos na main window
+        self.selected = []          #aqui ficara o conjunto de processos selecionados pelo usuario (o unico uso é excluir o processo)
+        self.processWindowFrame:ttk.Frame = None    #frame para exibição dos processos
+        self.box = None     #vai representar a box onde poderemos escolher o algoritmo
+        self.butttons = []      #autoexplicativo
+        self.id = 0     #o contador unico para o ID dos processos
+        self.initWidgets()      #inicializa todos os widgets principais da aplicação
+        
 
-      
     def initWidgets(self):
         self.createTreeWidget()
         self.createBoxWidget()
@@ -57,27 +55,6 @@ class Simulador(Tk):
         self.processTree.heading("paginas", text="Nº Paginas")
         self.processTree.place(x=10,y=10)
 
-    def on_select(self, event):
-        self.selected = event.widget.selection()
-    
-    def print_selected(self):
-        need_delection = []
-        for idx in self.selected:
-            need_delection.append(self.processTree.item(idx)['values'][0])
-        
-        for element in need_delection:
-            selected = None
-            for process in self.processos:
-                if (process.getId() == element):
-                    selected = process
-                    break
-            if (selected is not None):
-                self.processos.remove(selected)
-                selectedVaribale = self.processTree.selection()
-                self.processTree.delete(selectedVaribale)
-
-
-
     def createBoxWidget(self):
         Label(self, text="Algoritmos").place(x=608,y=160)
         algoritmos = ["FIFO", "RoundRobin", "SJF", "EDF"]
@@ -97,21 +74,35 @@ class Simulador(Tk):
         exec_label = Label(self, text= "Sobrecarga").place(x=593, y=115, width=95)
         self.sobrecarga_entry = Entry(self, width=5)
         self.sobrecarga_entry.place(x=595, y=135, width=95)
+    
+    def on_select(self, event):
+        self.selected = event.widget.selection()
+    
+    def print_selected(self):
+        need_delection = []
+        for idx in self.selected:
+            need_delection.append(self.processTree.item(idx)['values'][0])
+        
+        for element in need_delection:
+            selected = None
+            for process in self.processos:
+                if (process.getId() == element):
+                    selected = process
+                    break
+            if (selected is not None):
+                self.processos.remove(selected)
+                selectedVaribale = self.processTree.selection()
+                self.processTree.delete(selectedVaribale)
 
-    def deleteProcess(self):
-        selected = self.processTree.selection()
-        print(selected)
-        self.processTree.delete(selected)
-
-
+    #esse método é invocado quando apertamos o botao "START"
     def startAction(self):
-
-        for processo in self.processos:
-            processo.restart()
+        
+        #essa função serve pra pegar a entrada do valor do QUANTUM e SOBRECARGA
         def getEntry():
             self.quantum = int(self.quantum_entry.get())
             self.sobrecarga = int(self.sobrecarga_entry.get())
         
+        #aqui criamos uma janela secundaria para exibição da execução dos algoritmos
         def createNewWindow(size):
             self.processWindow = Toplevel(self)
             self.processWindow.title(" Visualização")
@@ -121,41 +112,60 @@ class Simulador(Tk):
             for i in range (max_time):
                 Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
 
-            self.restart()
+            target:deque[Processo] = sorted(self.cpu.getEnded(), key=lambda x: x.id)
+            for i in range(1, len(target)+1):
+                Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
 
-            for i in range(len(self.processos)):
-                Label(self.processWindowFrame, text="Processo "+ str(i), relief="groove").grid(row=i+1, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
-
-            
-        
+        #reinicia o estado dos processos
+        self.restart()
+        #captura a entrada do usuario sobre o quantum e sobrecarga
         getEntry()
 
 
         action = self.box.get()
         if(action == "FIFO"):
-            max_time = self.FIFO(True)
+            max_time = self.FIFO()
             createNewWindow(max_time)
-            self.FIFO()
         elif(action == "SJF"):
-            max_time = self.SJF(True)
+            max_time = self.SJF()
             createNewWindow(max_time)
-            self.SJF()
         elif(action == "RoundRobin"):
-            max_time = self.RoundRobin(True)
+            max_time = self.RoundRobin()
             createNewWindow(max_time)
-            self.RoundRobin()
         elif(action == "EDF"):
-            max_time = self.EDF(True)
+            max_time = self.EDF()
             createNewWindow(max_time)
-            self.EDF()
-
-
-    def criarProcesso(self):
         
-        newWindow = Toplevel(self)
-        newWindow.title(" Janela de Criação de Processo")
-        newWindow.geometry("180x175")
+        #essa função é um chama ela novamente com um delay de 700ms
+        #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
+        def clock(currentTime, processList:list[Processo]):
+            i = 1
+            for process in processList:
+                labelList = process.getLabelList()
+                ver = True
+                for element in labelList:
+                    if element[1] == currentTime:
+                        Label(self.processWindowFrame, background=element[0], relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
+                        ver = False
+                        break
+                if(ver and currentTime < max_time):
+                    Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
+                i +=1
+            if (currentTime < max_time):
+                self.processWindowFrame.after(700, clock, currentTime+1, processList)   #o delay ocorre aqui
 
+        #serve pra chamar a função que renderizar as informações dos processos na tela
+        #precisamos ordenar a lista de processos pelo ID antes, para que seja mostrado corretamente na tela
+        def runProcess():
+            target = sorted(self.cpu.getEnded(), key=lambda x: x.id)
+            time = 0
+            clock(time, target)
+
+        runProcess()
+
+    #método acionado ao clicar no botao "CRIAR PROCESSO"
+    def criarProcesso(self):
+        #captura informações da criação do processo digitada pelo usuario
         def submit():
             tempoExec = int(exec_entry.get())
             tempoCheg = int(chegada_entry.get())
@@ -169,10 +179,16 @@ class Simulador(Tk):
             self.processos.append(processo)
             newWindow.destroy()
         
+        #autoexplicativo
         def cancel():
             newWindow.destroy()
         
-    
+
+        #informações da janela criada para adicionar novos processos.
+        newWindow = Toplevel(self)
+        newWindow.title(" Janela de Criação de Processo")
+        newWindow.geometry("180x175")
+
         exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
         exec_entry = Entry(newWindow, width=5)
         exec_entry.place(x=130,y=10)
@@ -198,101 +214,57 @@ class Simulador(Tk):
         submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
 
 
+    def FIFO(self):
+        self.cpu.start(self.processos)
+        while(not self.cpu.isEnded()):
+            if(self.cpu.isQueueEmpty()):
+                self.cpu.setTime(self.cpu.getTime() + 1)
+                self.cpu.checkProcessQueue()
+            else:
+                self.cpu.chooseProcess()
+                self.cpu.calculateProcessTime(mode= "FIFO",)
+        return self.cpu.getTime()
+        
+
+    def RoundRobin(self):
+        self.cpu.start(self.processos)
+        while(not self.cpu.isEnded()):
+            if(self.cpu.isQueueEmpty()):
+                self.cpu.setTime(self.cpu.getTime() + 1)
+                self.cpu.checkProcessQueue()
+            else:
+                self.cpu.chooseProcess()
+                self.cpu.calculateProcessTime(mode= "RR", quantum=self.quantum, sobrecarga=self.sobrecarga)
+        return self.cpu.getTime()
+            
+        
+
+    def SJF(self):
+        self.cpu.start(self.processos)
+        while(not self.cpu.isEnded()):
+            if(self.cpu.isQueueEmpty()):
+                self.cpu.setTime(self.cpu.getTime() + 1)
+                self.cpu.checkProcessQueue()
+            else:
+                self.cpu.chooseProcess(lower=True)
+                self.cpu.calculateProcessTime(mode= "SJF", quantum=self.quantum, sobrecarga=self.sobrecarga)
+        return self.cpu.getTime()
+        
+
+    def EDF(self):
+        self.cpu.start(self.processos)
+        while(not self.cpu.isEnded()):
+            if(self.cpu.isQueueEmpty()):
+                self.cpu.setTime(self.cpu.getTime() + 1)
+                self.cpu.checkProcessQueue()
+            else:
+                self.cpu.chooseProcess(prio=True)
+                self.cpu.calculateProcessTime(mode= "EDF", quantum=self.quantum, sobrecarga=self.sobrecarga)
+        return self.cpu.getTime()
+    
     def restart(self):
         for elem in self.processos:
             elem.restart()
-            
-
-    def FIFO(self, calculo = False):
-        if (not calculo):
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                    self.cpu.checkProcessQueue()
-                else:
-                    self.cpu.chooseProcess()
-                    self.cpu.startProcess(mode= "FIFO", target = self.processWindowFrame)
-        else:
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                    self.cpu.checkProcessQueue()
-                else:
-                    self.cpu.chooseProcess()
-                    self.cpu.calculateProcess(mode= "FIFO",)
-            return self.cpu.getTime()
-        
-
-    def RoundRobin(self, calculo = False):
-        if (not calculo):
-            turnaround = 0
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess()
-                    a = self.cpu.startProcess(mode= "RR", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
-                    if (a is not None):
-                        turnaround += a
-            print(turnaround/len(self.processos))
-        else:
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess()
-                    self.cpu.calculateProcess(mode= "RR", quantum=self.quantum, sobrecarga=self.sobrecarga)
-            return self.cpu.getTime()
-            
-        
-        
-
-    def SJF(self, calculo = False):
-        if (not calculo):
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess(lower=True)
-                    self.cpu.startProcess(mode= "SJF", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
-        else:
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess(lower=True)
-                    self.cpu.calculateProcess(mode= "SJF", quantum=self.quantum, sobrecarga=self.sobrecarga)
-            return self.cpu.getTime()
-        
-
-    def EDF(self, calculo = False):
-        if (not calculo):
-            turnaround = 0
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess(prio=True)
-                    a = self.cpu.startProcess(mode= "EDF", target=self.processWindowFrame, quantum=self.quantum, sobrecarga=self.sobrecarga)
-                    if (a is not None):
-                        turnaround += a
-            print(turnaround/len(self.processos))
-        else:
-            self.cpu.start(self.processos)
-            while(not self.cpu.isEnded()):
-                if(self.cpu.isQueueEmpty()):
-                    self.cpu.setTime(self.cpu.getTime() + 1)
-                else:
-                    self.cpu.chooseProcess(prio=True)
-                    self.cpu.calculateProcess(mode= "EDF", quantum=self.quantum, sobrecarga=self.sobrecarga)
-            return self.cpu.getTime()
 
         
 
