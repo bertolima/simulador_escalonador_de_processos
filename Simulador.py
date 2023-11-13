@@ -72,9 +72,12 @@ class Simulador(Tk):
         self.pageBox.place(x=595, y=235, width=95)        
 
     def createButtonsWidget(self):
-        Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=330, width=95)
-        Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=595, y=10, width=95)
-        Button(self, text ="Deletar Processo", relief="raised",command=self.print_selected).place(x=595, y=45, width=95)
+        Button(self, text ="START", relief="raised",
+               command=self.startAction).place(x=595, y=330, width=95)
+        Button(self, text ="Criar Processo", relief="raised",
+               command=self.criarProcesso).place(x=595, y=10, width=95)
+        Button(self, text ="Deletar Processo", relief="raised",
+               command=self.print_selected).place(x=595, y=45, width=95)
 
     def createTextBoxWidget(self):
         chegada_label = ttk.Label(self, text= "Quantum").place(x=612, y=75, width=95)
@@ -87,7 +90,8 @@ class Simulador(Tk):
         
     def createSlider(self):
         self.slider = Scale(self, from_=0.125, to=2,
-                            orient=HORIZONTAL, resolution=0.125, digits=4)
+                            orient=HORIZONTAL, resolution=0.125,
+                            digits=4)
         self.slider.place(x=595, y=260, width=95)
         segundos_label = ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
