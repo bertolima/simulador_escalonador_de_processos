@@ -89,6 +89,7 @@ class Simulador(Tk):
     def createSlider(self):
         self.slider = Scale(self, from_=0.125, to=2,
                             orient=HORIZONTAL, resolution=0.125, digits=4)
+        self.slider.set(0.700)
         self.slider.place(x=595, y=260, width=95)
         segundos_label = ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
