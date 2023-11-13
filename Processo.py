@@ -79,5 +79,7 @@ class Processo:
     def setTempoTotal(self, tempo):
         self.tempoTotal = tempo
     
+    def getPaginas(self):
+        return self.paginas
 
 
