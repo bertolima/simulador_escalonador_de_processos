@@ -29,6 +29,7 @@ class Memory:
         
         return pages
     
+    
     def hasContinuosSpace(self, process:Processo): # calcula se tem espaço contínuo (não fragmentado) na memória 
         start = 0
         end = 0
@@ -81,6 +82,7 @@ class Memory:
         while (i < last_page):
             self.disk[i] = "-"
             i+=1
+    
     
     def allocateInMemory(self, process:Processo): # aloca o processo na memória
         if process.getId() in self.memory: # se o processo já tiver na memória, não faz nada
@@ -137,11 +139,10 @@ class Memory:
                 self.freeSpace -= process.getPaginas() # diminuo o espaço livre
                 self.queue.append(process) # adiciono na fila de processos para o FIFO
         
-                    
-                           
-    
+            
     def getMemory(self):
         return self.memory
+    
     
     def getDisk(self):
         return self.disk
