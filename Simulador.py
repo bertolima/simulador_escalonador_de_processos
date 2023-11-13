@@ -10,7 +10,7 @@ class Simulador(Tk):
 
     def __init__(self):
         super().__init__()
-        self.geometry("700x250")
+        self.geometry("700x370")
         self.title("Escalonador de processos")
         
         #iniciar as variavels como None é como usar um NULLPOINTER, é interessante pra inicializar atributos de classes.
@@ -31,12 +31,17 @@ class Simulador(Tk):
         self.id = 0     #o contador unico para o ID dos processos
         self.initWidgets()      #inicializa todos os widgets principais da aplicação
         
+        self.pageBox = None
+        self.slider = None
+
+        
 
     def initWidgets(self):
         self.createTreeWidget()
-        self.createBoxWidget()
+        self.createBoxWidgets()
         self.createButtonsWidget()
         self.createTextBoxWidget()
+        self.createSlider()
 
     def createTreeWidget(self):
         self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings")
@@ -55,14 +60,19 @@ class Simulador(Tk):
         self.processTree.heading("paginas", text="Nº Paginas")
         self.processTree.place(x=10,y=10)
 
-    def createBoxWidget(self):
+    def createBoxWidgets(self):
         Label(self, text="Algoritmos").place(x=608,y=160)
-        algoritmos = ["FIFO", "RoundRobin", "SJF", "EDF"]
-        self.box = ttk.Combobox(self, values=algoritmos)
+        algoritmos_processos = ["FIFO", "RoundRobin", "SJF", "EDF"]
+        self.box = ttk.Combobox(self, values=algoritmos_processos)
         self.box.place(x=595,y=180, width=95)
+        
+        Label(self, text="Paginação").place(x=608,y=215)
+        algoritmos_paginacao = ["FIFO", "LRU"]
+        self.pageBox = ttk.Combobox(self, values=algoritmos_paginacao)
+        self.pageBox.place(x=595, y=235, width=95)        
 
     def createButtonsWidget(self):
-        Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=210, width=95)
+        Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=330, width=95)
         Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=595, y=10, width=95)
         Button(self, text ="Deletar Processo", relief="raised",command=self.print_selected).place(x=595, y=45, width=95)
 
@@ -74,6 +84,12 @@ class Simulador(Tk):
         exec_label = Label(self, text= "Sobrecarga").place(x=593, y=115, width=95)
         self.sobrecarga_entry = Entry(self, width=5)
         self.sobrecarga_entry.place(x=595, y=135, width=95)
+        
+    def createSlider(self):
+        self.slider = Scale(self, from_=0.125, to=2,
+                            orient=HORIZONTAL, resolution=0.125, digits=4)
+        self.slider.place(x=595, y=260, width=95)
+        segundos_label = ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
     def on_select(self, event):
         self.selected = event.widget.selection()
