@@ -34,6 +34,10 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
+        self.processos.append(Processo(0, 0, 4, 1, 1, 10))
+        self.processos.append(Processo(1, 2, 2, 1, 1, 8))
+        self.processos.append(Processo(2, 4,1, 1, 1,5))
+        self.processos.append(Processo(3, 6, 3, 1, 1, 10))
         
         self.processWindow = None   #janela onde a execução dos processos será mostrada
         self.processTree = None     #arvore de exibição dos processos na main window
@@ -178,8 +182,12 @@ class Simulador(Tk):
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
-        def clock(currentTime, processList:list[Processo]):
+        def clock(currentTime, processList:list[Processo], memoryList:list):
             i = 1
+            for elem in memoryList:
+                    if elem[2] == currentTime:
+                        self.memoryLabels[elem[0]].config(text = str(elem[3]), bg = elem[1])
+
             for process in processList:
                 labelList = process.getLabelList()
                 ver = True
@@ -192,14 +200,23 @@ class Simulador(Tk):
                     Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                 i +=1
             if (currentTime < max_time):
-                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList)   #o delay ocorre aqui
+                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList, memoryList)   #o delay ocorre aqui
+            else:
+                k=0
+                for i in range(5):
+                    for j in range(10):
+                        self.memoryLabels[k].config(text="-", bg="SystemButtonFace")
+                        k+=1
+
+
 
         #serve pra chamar a função que renderizar as informações dos processos na tela
         #precisamos ordenar a lista de processos pelo ID antes, para que seja mostrado corretamente na tela
         def runProcess():
             target = sorted(self.cpu.getEnded(), key=lambda x: x.id)
+            targetMemory = sorted(self.cpu.getMemoryLabels(), key = lambda x: x[2])
             time = 0
-            clock(time, target)
+            clock(time, target, targetMemory)
 
         runProcess()
 
@@ -258,7 +275,7 @@ class Simulador(Tk):
 
 
     def FIFO(self):
-        self.cpu.start(self.processos)
+        self.cpu.start(self.processos, "FIFO")
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -270,7 +287,7 @@ class Simulador(Tk):
         
 
     def RoundRobin(self):
-        self.cpu.start(self.processos)
+        self.cpu.start(self.processos, "RR")
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -283,7 +300,7 @@ class Simulador(Tk):
         
 
     def SJF(self):
-        self.cpu.start(self.processos)
+        self.cpu.start(self.processos, "SJF")
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -295,7 +312,7 @@ class Simulador(Tk):
         
 
     def EDF(self):
-        self.cpu.start(self.processos)
+        self.cpu.start(self.processos, "EDF")
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)

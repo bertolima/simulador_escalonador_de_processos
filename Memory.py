@@ -15,6 +15,7 @@ class Memory:
         self.algorithm = algorithm # FIFO ou LRU
         self.freeSpace = self.memorySize # monitoramento do espaço livre na memória
         self.queue = deque() # fila para gerenciar quando houver page fault
+        self.mode = None
         
     def allocateAllPages(self, all_processes:dict): # dicionário {Processo: Nº Páginas}
         pages = 0
@@ -146,60 +147,12 @@ class Memory:
     
     def getDisk(self):
         return self.disk
-
-
-
-# -- TESTES --
-
-p1 = Processo(1, 2, 3, 5, 1, 12)
-p2 = Processo(2, 3, 5, 7, 2, 12)
-p3 = Processo(3, 4, 6, 2, 3, 12)
-p4 = Processo(4, 2, 2, 8, 4, 15)
-p5 = Processo(5, 1, 5, 2, 4, 9)
     
-all_processes_example = {
-    p1: p1.getPaginas(),
-    p2: p2.getPaginas(),
-    p3: p3.getPaginas(),
-    p4: p4.getPaginas(),
-    p5: p5.getPaginas()
-}
+    def desallocateProcess(self, process:Processo):
+        for i in range(len(self.memory)):
+            if(self.memory[i] == process.getId()):
+                self.memory[i] = "-"
 
-a = Memory("FIFO", all_processes_example)
-
-
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p1)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p2)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p3)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p4)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p1)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-a.allocateInMemory(p5)
-print("Disco")
-print(a.getDisk())
-print("Memória")
-print(a.getMemory())
-
+        for elem in self.disk:
+            if elem == process.getId():
+                elem = "-"

@@ -12,11 +12,18 @@ class Processador:
         self.time = 0   #clock do sistema
         self.currentProcess:Processo = None #Simula o processo que esta sendo executado no momento
         self.endedProcess = []  #processos ja finalizados entram aqui
+        self.memory = None
+        self.memoryLabels = deque()
 
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
-    def start(self, process_queue:deque[Processo], ):
+    def start(self, process_queue:deque[Processo], mode):
         self.queue = deque(process_queue)
+        self.mode = mode
+        process_dic = {}
+        for process in self.queue:
+            process_dic[process] = process.getPaginas()
+        self.memory = Memory(mode, process_dic)
         self.time = 0
         self.endedProcess.clear()
         self.checkProcessQueue()
@@ -39,7 +46,7 @@ class Processador:
     def chooseProcess(self, lower = False, prio = False):
         if (self.currentProcess is None and self.currentProcessQueue):
             if (not lower and not prio):
-                self.currentProcess = self.currentProcessQueue.popleft()
+                self.currentProcess = self.currentProcessQueue.popleft() 
 
             elif(lower and not prio):
                 maxValue = float('inf')
@@ -63,6 +70,13 @@ class Processador:
                         self.currentProcess = process
                         break
                 self.currentProcessQueue.remove(self.currentProcess)
+            self.memory.allocateInMemory(self.currentProcess)
+            currentState = self.memory.getMemory()
+            for i in range(len(currentState)):
+                if currentState[i] == "-":
+                    self.memoryLabels.append((i, "SystemButtonFace", self.time, "-"))
+                else:
+                    self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
 
     #aqui todo funcionamento do sistema é feito "por debaixo dos panos" e as informações de como deverá ser renderizado
     #ficam dentro das instancias de cada um do processo guardados na fila "LabelList", a partir dessa fila é feita a
@@ -75,6 +89,7 @@ class Processador:
                     self.time += 1
                     self.checkProcessQueue()
                 self.endedProcess.append(self.currentProcess)
+                self.memory.desallocateProcess(self.currentProcess)
                 self.currentProcess = None
 
         elif (mode == "RR"):
@@ -89,6 +104,7 @@ class Processador:
                 self.checkProcessQueue()
                 if(self.currentProcess.isEnded()):
                     self.endedProcess.append(self.currentProcess)
+                    self.memory.desallocateProcess(self.currentProcess)
                     break
             if(not self.currentProcess.isEnded()):
                 self.currentProcess.sobrecarga(self.time)
@@ -109,6 +125,7 @@ class Processador:
                 self.time += 1
                 self.checkProcessQueue()
             self.endedProcess.append(self.currentProcess)
+            self.memory.desallocateProcess(self.currentProcess)
             self.currentProcess = None
 
         elif (mode == "EDF"):
@@ -122,6 +139,7 @@ class Processador:
                 self.time += 1
                 self.checkProcessQueue()
                 if(self.currentProcess.isEnded()):
+                    self.memory.desallocateProcess(self.currentProcess)
                     break
             if(not self.currentProcess.isEnded()):
                 self.currentProcess.sobrecarga(self.time)
@@ -154,6 +172,9 @@ class Processador:
     
     def setTime(self,time):
         self.time = time
+    
+    def getMemoryLabels(self):
+        return self.memoryLabels
 
 
 

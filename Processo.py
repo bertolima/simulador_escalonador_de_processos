@@ -11,6 +11,7 @@ class Processo:
         self.prioridade = prioridade
         self.paginas = paginas
         self.tempoTotal = 0
+        self.color = "red"
 
         #aqui é o calculado o tempo restante que o processo tem a ser executado
         self.tempoExecVar = tempoExec
@@ -81,5 +82,8 @@ class Processo:
     
     def getPaginas(self):
         return self.paginas
+    
+    def getColor(self):
+        return self.color
 
 
