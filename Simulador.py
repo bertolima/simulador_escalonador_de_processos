@@ -8,8 +8,18 @@ from Processador import Processador
 
 class Simulador(Tk):
 
-    def __init__(self):
+    def __init__(self, width, heigth):
         super().__init__()
+        self.width = width
+        self.heigth = heigth
+
+        self.screen_width = self.winfo_screenwidth()
+        self.screen_height = self.winfo_screenheight()
+        x = ( self.screen_width/2) - (self.width/2)
+        y = ( self.screen_height/2) - (self.heigth/2)
+        self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y))
+
+
         self.geometry("700x370")
         self.title("Escalonador de processos")
         
@@ -126,6 +136,9 @@ class Simulador(Tk):
         #aqui criamos uma janela secundaria para exibição da execução dos algoritmos
         def createNewWindow(size):
             self.processWindow = Toplevel(self)
+            x = ( self.screen_width/2) - (180/2)
+            y = ( self.screen_height/2) - (self.heigth/2)
+            self.processWindow.geometry('+%d+%d'%(x+self.width/12, y))
             self.processWindow.title(" Visualização")
             self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
             self.processWindowFrame.grid(row=0, column=0, padx=3, pady=3)
@@ -207,6 +220,9 @@ class Simulador(Tk):
 
         #informações da janela criada para adicionar novos processos.
         newWindow = Toplevel(self)
+        x = ( self.screen_width/2) - (180/2)
+        y = ( self.screen_height/2) - (175/2)
+        newWindow.geometry('%dx%d+%d+%d' % (180, 175, x- self.screen_width/5, y))
         newWindow.title(" Janela de Criação de Processo")
         newWindow.geometry("180x175")
 
