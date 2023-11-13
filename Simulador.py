@@ -1,6 +1,6 @@
 from Processo import Processo
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, font
 from collections import deque
 from Processador import Processador
 
@@ -31,10 +31,13 @@ class Simulador(Tk):
         self.box = None     #vai representar a box onde poderemos escolher o algoritmo
         self.butttons = []      #autoexplicativo
         self.id = 0     #o contador unico para o ID dos processos
-        self.initWidgets()      #inicializa todos os widgets principais da aplicação
-        
-        
 
+        self.defaultFont = font.nametofont("TkDefaultFont") 
+        self.defaultFont.configure(family="Helvetica", 
+                                   size=8, 
+                                   weight=font.BOLD,
+                                   slant='roman') 
+        self.initWidgets()      #inicializa todos os widgets principais da aplicação
         
 
     def initWidgets(self):
@@ -45,7 +48,7 @@ class Simulador(Tk):
         self.createSlider()
 
     def createTreeWidget(self):
-        self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings")
+        self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings", height=16)
         self.processTree.bind("<<TreeviewSelect>>", self.on_select)
         self.processTree.column("id", minwidth=0, width=30)
         self.processTree.column("chegada", minwidth=0, width=120)
@@ -59,38 +62,38 @@ class Simulador(Tk):
         self.processTree.heading("prio", text="Prioridade")
         self.processTree.heading("deadline", text="Deadline")
         self.processTree.heading("paginas", text="Nº Paginas")
-        self.processTree.place(x=10,y=10)
+        self.processTree.grid(row=0, column=0, padx=10, pady=10)
 
     def createBoxWidgets(self):
-        Label(self, text="Algoritmos").place(x=608,y=160)
+        Label(self, text="Algoritmos", width=11).place(x=598,y=160)
         algoritmos_processos = ["FIFO", "RoundRobin", "SJF", "EDF"]
         self.box = ttk.Combobox(self, values=algoritmos_processos)
-        self.box.place(x=595,y=180, width=95)
+        self.box.place(x=590,y=180, width=100)
         
-        Label(self, text="Paginação").place(x=608,y=215)
+        Label(self, text="Paginação", width=11).place(x=598,y=210)
         algoritmos_paginacao = ["FIFO", "LRU"]
         self.pageBox = ttk.Combobox(self, values=algoritmos_paginacao)
-        self.pageBox.place(x=595, y=235, width=95)        
+        self.pageBox.place(x=590, y=230, width=100)        
 
     def createButtonsWidget(self):
-        Button(self, text ="START", relief="raised",command=self.startAction).place(x=595, y=330, width=95)
-        Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=595, y=10, width=95)
-        Button(self, text ="Deletar Processo", relief="raised",command=self.print_selected).place(x=595, y=45, width=95)
+        Button(self, text ="START", relief="raised",command=self.startAction).place(x=590, y=330, width=100)
+        Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=590, y=10, width=100)
+        Button(self, text ="Excluir Processo", relief="raised",command=self.print_selected).place(x=590, y=45, width=100)
 
     def createTextBoxWidget(self):
-        chegada_label = ttk.Label(self, text= "Quantum").place(x=612, y=75, width=95)
+        chegada_label = ttk.Label(self, text= "Quantum").place(x=610, y=75, width=100)
         self.quantum_entry = ttk.Entry(self, width=5)
-        self.quantum_entry.place(x=595, y=95, width=95)
+        self.quantum_entry.place(x=590, y=95, width=100)
 
-        exec_label = Label(self, text= "Sobrecarga").place(x=593, y=115, width=95)
+        exec_label = Label(self, text= "Sobrecarga").place(x=590, y=115, width=100)
         self.sobrecarga_entry = Entry(self, width=5)
-        self.sobrecarga_entry.place(x=595, y=135, width=95)
+        self.sobrecarga_entry.place(x=590, y=135, width=100)
         
     def createSlider(self):
         self.slider = Scale(self, from_=0.125, to=2,
                             orient=HORIZONTAL, resolution=0.125, digits=4)
         self.slider.set(0.700)
-        self.slider.place(x=595, y=260, width=95)
+        self.slider.place(x=590, y=260, width=100)
         segundos_label = ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
     def on_select(self, event):
