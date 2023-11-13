@@ -28,6 +28,25 @@ class Memory:
             pages += process_pages 
         
         return pages
+    
+    
+    def hasContinuosSpace(self, process:Processo): # calcula se tem espaço contínuo (não fragmentado) na memória 
+        start = 0
+        end = 0
+        out = False
+        for i in range(self.memorySize):
+            if (end - start) == process.getPaginas(): # quando achar um espaço, sai do loop
+                out = True
+                break
+            
+            if self.memory[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
+                end += 1
+            else: # se encontrar algo que não seja vazio, reinicia
+                start = i
+                end = i
+        
+        return out
+        
             
     def reallocateInDisk(self, process:Processo): # método para tirar processo da memória e por no disco
         i = self.memory.index(process.getId())
@@ -39,7 +58,6 @@ class Memory:
         
         # usei esse mecanismo de start e end para encontrar o primeiro espaço livre do disco que caiba o processo inteiro, sem fragmentação 
         
-        #TODO: transformar esse bloco inteiro num método, para usar na RAM também
         start = 0
         end = 0
         for i in range(self.diskSize):
@@ -49,12 +67,13 @@ class Memory:
             if self.disk[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
                 end += 1
             else: # se encontrar algo que não seja vazio, reinicia
-                start = i
-                end = i
+                start = i+1
+                end = i+1
         
         while (start < end): # itera sobre esse espaço colocando as páginas no disco
             self.disk[start] = process.getId()
             start += 1
+            
         
     def removeFromDisk(self, process:Processo): # remove processo do disco para levar à memória
         i = self.disk.index(process.getId())
@@ -64,6 +83,7 @@ class Memory:
             self.disk[i] = "-"
             i+=1
     
+    
     def allocateInMemory(self, process:Processo): # aloca o processo na memória
         if process.getId() in self.memory: # se o processo já tiver na memória, não faz nada
             return
@@ -72,14 +92,24 @@ class Memory:
         
         self.removeFromDisk(process=process) # tiro o processo do disco para transferir à memória
         
-        if self.freeSpace >= process.getPaginas(): # se tiver espaço suficiente, coloco direto, sem precisar do algoritmo
+        if self.hasContinuosSpace(process=process): # se tiver espaço contínuo (não fragmentado) suficiente, coloco direto, sem precisar do algoritmo
+        
+            # procura pelo espaço inicial e final da memória, onde o processo será alocado
+            start = 0
+            end = 0
+            for i in range(self.memorySize):
+                if (end - start) == process.getPaginas(): # quando achar um espaço, sai do loop
+                    break
+                
+                if self.memory[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
+                    end += 1
+                else: # se encontrar algo que não seja vazio, reinicia
+                    start = i+1
+                    end = i+1
             
-            # TODO: mudar essa lógica, pois dá erro quando tem espaço suficiente e o espaço não é contínuo, mas sim fragmentado entre a memória
-            i = self.memory.index("-")
-            last_page = i + process.getPaginas()
-            while(i<last_page):
-                self.memory[i] = process.getId()
-                i+=1
+            while (start < end): # itera sobre esse espaço colocando as páginas no disco
+                self.memory[start] = process.getId()
+                start += 1
             
             self.freeSpace -= process.getPaginas() # diminuo o contador de espaço livre na memória
             self.queue.append(process) # adiciono na fila de processos para o FIFO
@@ -97,8 +127,7 @@ class Memory:
                 self.freeSpace += space_to_be_realocated # aumento o espaço o livre
                 self.reallocateInDisk(process=self.queue[0]) # realoco o último processo necessário no disco
                     
-                # acho o primeiro espaço livre após as realocações 
-                # TODO: essa forma está errada de se fazer, preciso usar aquele método do achar o início e o fim
+                # acho o primeiro espaço livre após as remoções da memória
                 i = self.memory.index("-")
                 last_page = i + process.getPaginas()
                 
@@ -110,11 +139,10 @@ class Memory:
                 self.freeSpace -= process.getPaginas() # diminuo o espaço livre
                 self.queue.append(process) # adiciono na fila de processos para o FIFO
         
-                    
-                           
-    
+            
     def getMemory(self):
         return self.memory
+    
     
     def getDisk(self):
         return self.disk
@@ -123,29 +151,55 @@ class Memory:
 
 # -- TESTES --
 
-p1 = Processo(0, 2, 3, 5, 1, 12)
-p2 = Processo(1, 3, 5, 7, 2, 12)
-p3 = Processo(2, 4, 6, 2, 3, 12)
-p4 = Processo(3, 2, 2, 8, 4, 15)
+p1 = Processo(1, 2, 3, 5, 1, 12)
+p2 = Processo(2, 3, 5, 7, 2, 12)
+p3 = Processo(3, 4, 6, 2, 3, 12)
+p4 = Processo(4, 2, 2, 8, 4, 15)
+p5 = Processo(5, 1, 5, 2, 4, 9)
     
 all_processes_example = {
     p1: p1.getPaginas(),
     p2: p2.getPaginas(),
     p3: p3.getPaginas(),
-    p4: p4.getPaginas()
+    p4: p4.getPaginas(),
+    p5: p5.getPaginas()
 }
 
 a = Memory("FIFO", all_processes_example)
 
+
+print("Disco")
 print(a.getDisk())
+print("Memória")
+print(a.getMemory())
 a.allocateInMemory(p1)
+print("Disco")
+print(a.getDisk())
+print("Memória")
+print(a.getMemory())
 a.allocateInMemory(p2)
+print("Disco")
+print(a.getDisk())
+print("Memória")
+print(a.getMemory())
 a.allocateInMemory(p3)
+print("Disco")
+print(a.getDisk())
+print("Memória")
 print(a.getMemory())
 a.allocateInMemory(p4)
-print(a.getMemory())
+print("Disco")
 print(a.getDisk())
+print("Memória")
+print(a.getMemory())
 a.allocateInMemory(p1)
-print(a.getMemory())
+print("Disco")
 print(a.getDisk())
+print("Memória")
+print(a.getMemory())
+a.allocateInMemory(p5)
+print("Disco")
+print(a.getDisk())
+print("Memória")
+print(a.getMemory())
 
