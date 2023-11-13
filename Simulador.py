@@ -30,6 +30,7 @@ class Simulador(Tk):
         self.sobrecarga_entry = None
         self.pageBox = None
         self.slider = None
+        self.memoryLabels:list[Label] = []
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
@@ -128,47 +129,52 @@ class Simulador(Tk):
     #esse método é invocado quando apertamos o botao "START"
     def startAction(self):
         
-        #essa função serve pra pegar a entrada do valor do QUANTUM e SOBRECARGA
-        def getEntry():
-            self.quantum = int(self.quantum_entry.get())
-            self.sobrecarga = int(self.sobrecarga_entry.get())
-        
-        #aqui criamos uma janela secundaria para exibição da execução dos algoritmos
-        def createNewWindow(size):
-            self.processWindow = Toplevel(self)
-            x = ( self.screen_width/2) - (180/2)
-            y = ( self.screen_height/2) - (self.heigth/2)
-            self.processWindow.geometry('+%d+%d'%(x+self.width/12, y))
-            self.processWindow.title(" Visualização")
-            self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
-            self.processWindowFrame.grid(row=0, column=0, padx=3, pady=3)
-            
-            for i in range (max_time):
-                Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
-
-            target:deque[Processo] = sorted(self.cpu.getEnded(), key=lambda x: x.id)
-            for i in range(1, len(target)+1):
-                Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
-
         #reinicia o estado dos processos
         self.restart()
-        #captura a entrada do usuario sobre o quantum e sobrecarga
-        getEntry()
 
+        #captura a entrada do usuario sobre o quantum e sobrecarga
+        self.quantum = int(self.quantum_entry.get())
+        self.sobrecarga = int(self.sobrecarga_entry.get())
 
         action = self.box.get()
         if(action == "FIFO"):
             max_time = self.FIFO()
-            createNewWindow(max_time)
         elif(action == "SJF"):
             max_time = self.SJF()
-            createNewWindow(max_time)
         elif(action == "RoundRobin"):
             max_time = self.RoundRobin()
-            createNewWindow(max_time)
         elif(action == "EDF"):
             max_time = self.EDF()
-            createNewWindow(max_time)
+        
+        self.processWindow = Toplevel(self)
+        x = ( self.screen_width/2) - (180/2)
+        y = ( self.screen_height/2) - (self.heigth/2)
+        self.processWindow.geometry('+%d+%d'%(x+self.width/12, y))
+        self.processWindow.title(" Visualização")
+        self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
+        self.processWindowFrame.grid(row=0, column=0, padx=3, pady=3)
+        
+        for i in range (max_time):
+            Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
+
+        target:deque[Processo] = sorted(self.cpu.getEnded(), key=lambda x: x.id)
+        for i in range(1, len(target)+1):
+            Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
+
+        memoryWindow = Toplevel(self)
+        memoryWindow.geometry('+%d+%d'%(x+self.processWindow.winfo_reqwidth()+self.width/12, y))
+        memoryWindow.title("RAM")
+        memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
+        memoryFrame.pack(padx=3, pady=3)
+
+        k=0
+        for i in range(5):
+            for j in range(10):
+                self.memoryLabels.append(Label(memoryFrame, relief="groove", width=3, height=2))
+                self.memoryLabels[k].grid(row=i, column=j)
+                k+=1
+
+
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
