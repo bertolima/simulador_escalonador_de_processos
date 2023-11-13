@@ -32,8 +32,22 @@ class Memory:
     def reallocateInDisk(self):
         return
     
-    def allocateInMemory(self):
-        return
+    def allocateInMemory(self, process:Processo):
+        if process.getId() in self.memory:
+            return
+           
+        if self.freeSpace > process.getPaginas():
+            i = self.memory.index("-")
+            last_page = i + process.getPaginas()
+            while(i<last_page):
+                self.memory[i] = process.getId()
+                i+=1
+            
+            self.freeSpace -= process.getPaginas()
+            self.queue.append(process)
+            print(self.queue[0].getId())
+        
+                
     
     def getMemory(self):
         return self.memory
@@ -55,6 +69,18 @@ all_processes_example = {
     p4: p4.getPaginas()
 }
 
-a = Memory("Fifo", all_processes_example)
+a = Memory("FIFO", all_processes_example)
+
+a.allocateInMemory(p1)
+a.allocateInMemory(p2)
+a.allocateInMemory(p3)
+a.allocateInMemory(p4)
 
 print(a.getDisk())
+
+print(a.getMemory())
+
+
+a.allocateInMemory(p2)
+
+print(a.getMemory())
