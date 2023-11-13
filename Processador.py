@@ -1,5 +1,6 @@
 from collections import deque
 from Processo import Processo
+from Memory import Memory
 import threading
 
 class Processador:
@@ -14,7 +15,7 @@ class Processador:
 
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
-    def start(self, process_queue:deque[Processo]):
+    def start(self, process_queue:deque[Processo], ):
         self.queue = deque(process_queue)
         self.time = 0
         self.endedProcess.clear()
