@@ -16,7 +16,7 @@ class Memory:
         self.freeSpace = self.memorySize
         self.queue = deque()
         
-    def allocateAllPages(self, all_processes:dict):
+    def allocateAllPages(self, all_processes:dict): # dicionário {Processo: Nº Páginas}
         pages = 0
         
         for process in all_processes:
@@ -29,7 +29,7 @@ class Memory:
         return pages
         
     
-    def allocateInDisk(self):
+    def reallocateInDisk(self):
         return
     
     def allocateInMemory(self):
