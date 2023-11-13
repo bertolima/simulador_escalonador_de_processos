@@ -18,6 +18,8 @@ class Simulador(Tk):
         self.sobrecarga = None
         self.quantum_entry = None
         self.sobrecarga_entry = None
+        self.pageBox = None
+        self.slider = None
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
@@ -31,8 +33,7 @@ class Simulador(Tk):
         self.id = 0     #o contador unico para o ID dos processos
         self.initWidgets()      #inicializa todos os widgets principais da aplicação
         
-        self.pageBox = None
-        self.slider = None
+        
 
         
 
@@ -168,7 +169,7 @@ class Simulador(Tk):
                     Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                 i +=1
             if (currentTime < max_time):
-                self.processWindowFrame.after(700, clock, currentTime+1, processList)   #o delay ocorre aqui
+                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList)   #o delay ocorre aqui
 
         #serve pra chamar a função que renderizar as informações dos processos na tela
         #precisamos ordenar a lista de processos pelo ID antes, para que seja mostrado corretamente na tela
