@@ -75,7 +75,7 @@ class Processador:
             for i in range(len(currentState)):
                 if currentState[i] == "-":
                     self.memoryLabels.append((i, "SystemButtonFace", self.time, "-"))
-                else:
+                elif (currentState[i] == self.currentProcess.getId()):
                     self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
 
     #aqui todo funcionamento do sistema é feito "por debaixo dos panos" e as informações de como deverá ser renderizado
@@ -175,6 +175,9 @@ class Processador:
     
     def getMemoryLabels(self):
         return self.memoryLabels
+    
+    def resetMemoryLabels(self):
+        self.memoryLabels.clear()
 
 
 
