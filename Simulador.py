@@ -135,6 +135,8 @@ class Simulador(Tk):
         
         #reinicia o estado dos processos
         self.restart()
+        self.cpu.resetMemoryLabels()
+        self.memoryLabels.clear()
 
         #captura a entrada do usuario sobre o quantum e sobrecarga
         self.quantum = int(self.quantum_entry.get())
