@@ -34,10 +34,12 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
-        self.processos.append(Processo(0, 0, 6, 1, 1, 10))
+        self.processos.append(Processo(0, 0, 7, 1, 1, 11))
         self.processos.append(Processo(1, 2, 8, 1, 1, 8))
         self.processos.append(Processo(2, 4,9, 1, 1,5))
         self.processos.append(Processo(3, 6, 6, 1, 1, 10))
+        self.processos.append(Processo(4, 8, 5, 1, 1, 10))
+        self.processos.append(Processo(5, 10, 3, 1, 1, 10))
         
         self.processWindow = None   #janela onde a execução dos processos será mostrada
         self.processTree = None     #arvore de exibição dos processos na main window
@@ -207,7 +209,7 @@ class Simulador(Tk):
                 k=0
                 for i in range(5):
                     for j in range(10):
-                        self.memoryLabels[k].config(text="-", bg="SystemButtonFace")
+                        self.memoryLabels[k].config(text="-", bg="white")
                         k+=1
 
 
@@ -277,7 +279,7 @@ class Simulador(Tk):
 
 
     def FIFO(self):
-        self.cpu.start(self.processos, "FIFO")
+        self.cpu.start(self.processos, self.pageBox.get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -289,7 +291,7 @@ class Simulador(Tk):
         
 
     def RoundRobin(self):
-        self.cpu.start(self.processos, "RR")
+        self.cpu.start(self.processos, self.pageBox.get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -302,7 +304,7 @@ class Simulador(Tk):
         
 
     def SJF(self):
-        self.cpu.start(self.processos, "SJF")
+        self.cpu.start(self.processos, self.pageBox.get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -314,7 +316,7 @@ class Simulador(Tk):
         
 
     def EDF(self):
-        self.cpu.start(self.processos, "EDF")
+        self.cpu.start(self.processos, self.pageBox.get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
