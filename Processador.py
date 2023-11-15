@@ -74,7 +74,7 @@ class Processador:
             currentState = self.memory.getMemory()
             for i in range(len(currentState)):
                 if currentState[i] == "-":
-                    self.memoryLabels.append((i, "SystemButtonFace", self.time, "-"))
+                    self.memoryLabels.append((i, "white", self.time, "-"))
                 elif (currentState[i] == self.currentProcess.getId()):
                     self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
 
