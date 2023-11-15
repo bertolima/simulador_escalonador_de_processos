@@ -122,7 +122,6 @@ class Memory:
                 while(space_to_be_realocated < process.getPaginas()): # se não for suficiente, vou dropar quantos processos forem necessários para caber o novo processo
                     self.reallocateInDisk(process=self.queue[0]) # realoco no disco o primeiro processo da fila
                     self.queue.popleft() # pop
-                    
                     space_to_be_realocated += self.queue[0].getPaginas() # novo espaço para realocação
                     
                 self.freeSpace += space_to_be_realocated # aumento o espaço o livre
@@ -149,6 +148,7 @@ class Memory:
         return self.disk
     
     def desallocateProcess(self, process:Processo):
+        self.queue.remove(process)
         for i in range(len(self.memory)):
             if(self.memory[i] == process.getId()):
                 self.memory[i] = "-"
