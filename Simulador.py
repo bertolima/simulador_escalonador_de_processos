@@ -34,10 +34,10 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
-        self.processos.append(Processo(0, 0, 4, 1, 1, 10))
-        self.processos.append(Processo(1, 2, 2, 1, 1, 8))
-        self.processos.append(Processo(2, 4,1, 1, 1,5))
-        self.processos.append(Processo(3, 6, 3, 1, 1, 10))
+        self.processos.append(Processo(0, 0, 6, 1, 1, 10))
+        self.processos.append(Processo(1, 2, 8, 1, 1, 8))
+        self.processos.append(Processo(2, 4,9, 1, 1,5))
+        self.processos.append(Processo(3, 6, 6, 1, 1, 10))
         
         self.processWindow = None   #janela onde a execução dos processos será mostrada
         self.processTree = None     #arvore de exibição dos processos na main window
