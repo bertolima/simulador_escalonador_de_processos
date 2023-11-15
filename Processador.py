@@ -110,7 +110,9 @@ class Processador:
                 self.currentProcess.sobrecarga(self.time)
                 [processo.acumular(self.time) for processo in self.currentProcessQueue]
                 self.time +=1
+                self.checkProcessQueue()
                 self.currentProcessQueue.append(self.currentProcess)
+                
             else:
                 ret = self.currentProcess.getTempoTotal()
                 self.currentProcess = None
@@ -145,6 +147,7 @@ class Processador:
                 self.currentProcess.sobrecarga(self.time)
                 [processo.acumular(self.time) for processo in self.currentProcessQueue]
                 self.time +=1
+                self.checkProcessQueue()
                 self.currentProcessQueue.append(self.currentProcess)
             else:
                 self.endedProcess.append(self.currentProcess)
