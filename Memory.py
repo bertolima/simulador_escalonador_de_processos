@@ -117,7 +117,7 @@ class Memory:
             self.queue.popleft() # pop    
             
             # acho o primeiro espaço livre após as remoções da memória
-            self.find_and_fill_space(self.memory, process)
+            self.findAndFillSpace(self.memory, process)
 
             self.freeSpace -= process.getPaginas() # diminuo o espaço livre
             self.queue.append(process) # adiciono na fila de processos para o FIFO
