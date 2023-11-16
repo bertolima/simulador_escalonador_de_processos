@@ -159,10 +159,25 @@ class Simulador(Tk):
         self.processWindow = Toplevel(self)
         x = ( self.screen_width/2) - (180/2)
         y = ( self.screen_height/2) - (self.heigth/2)
-        self.processWindow.geometry('+%d+%d'%(x+self.width/12, y))
+        width = len(self.processos) * 40
+        self.processWindow.geometry('%dx%d+%d+%d'%(self.width, width+10, x+self.width/12, y))
         self.processWindow.title(" Visualização")
-        self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
-        self.processWindowFrame.grid(row=0, column=0, padx=3, pady=3)
+
+        wrapper = LabelFrame(self.processWindow)
+        mycanvas = Canvas(wrapper)
+        mycanvas.pack(side=BOTTOM)
+
+        scrollbar = ttk.Scrollbar(wrapper, orient='horizontal', command=mycanvas.xview)
+        scrollbar.pack(side = BOTTOM, fill=X )
+
+        mycanvas.configure(xscrollcommand=x)
+        mycanvas.bind('<Configure>', lambda e: mycanvas.configure(scrollregion= mycanvas.bbox('all')))
+
+        self.processWindowFrame = ttk.Frame(mycanvas, borderwidth=1, relief="solid")
+        self.processWindowFrame.pack()
+
+        wrapper.pack(fill="both", expand=YES, padx=10, pady=10)
+
         
         for i in range (max_time):
             Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
@@ -171,7 +186,7 @@ class Simulador(Tk):
         for i in range(1, len(target)+1):
             Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
 
-        memoryWindow = Toplevel(self)
+        memoryWindow = Toplevel(self.processWindow)
         memoryWindow.geometry('+%d+%d'%(x+self.processWindow.winfo_reqwidth()+self.width/12, y))
         memoryWindow.title("RAM")
         memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
