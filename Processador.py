@@ -14,6 +14,8 @@ class Processador:
         self.endedProcess = []  #processos ja finalizados entram aqui
         self.memory = None
         self.memoryLabels = deque()
+        
+        
 
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
@@ -75,7 +77,7 @@ class Processador:
             for i in range(len(currentState)):
                 if currentState[i] == "-":
                     self.memoryLabels.append((i, "white", self.time, "-"))
-                elif (currentState[i] == self.currentProcess.getId()):
+                elif (currentState[i] == self.currentProcess.getId()):                
                     self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
 
     #aqui todo funcionamento do sistema é feito "por debaixo dos panos" e as informações de como deverá ser renderizado
