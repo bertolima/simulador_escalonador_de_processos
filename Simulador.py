@@ -17,6 +17,8 @@ class Simulador(Tk):
         self.screen_height = self.winfo_screenheight()
         x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
+        self.colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
+        self.colorCounter = 0
         self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y))
 
 
@@ -34,12 +36,12 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
-        self.processos.append(Processo(0, 0, 7, 1, 1, 11))
-        self.processos.append(Processo(1, 2, 8, 1, 1, 8))
-        self.processos.append(Processo(2, 4,9, 1, 1,5))
-        self.processos.append(Processo(3, 6, 6, 1, 1, 10))
-        self.processos.append(Processo(4, 8, 5, 1, 1, 10))
-        self.processos.append(Processo(5, 10, 3, 1, 1, 10))
+        self.processos.append(Processo(0, 0, 7, 1, 1, 11, self.colors[0]))
+        self.processos.append(Processo(1, 2, 8, 1, 1, 8, self.colors[1]))
+        self.processos.append(Processo(2, 4,9, 1, 1,5, self.colors[2]))
+        self.processos.append(Processo(3, 6, 6, 1, 1, 10, self.colors[3]))
+        self.processos.append(Processo(4, 8, 5, 1, 1, 10, self.colors[4]))
+        self.processos.append(Processo(5, 10, 3, 1, 1, 10, self.colors[5]))
         
         self.processWindow = None   #janela onde a execução dos processos será mostrada
         self.processTree = None     #arvore de exibição dos processos na main window
@@ -234,7 +236,9 @@ class Simulador(Tk):
             dead = int(prioridade_entry.get())
             pag = int(pagina_entry.get())
 
-            processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag)
+            if(self.colorCounter == len(self.colors)): self.colorCounter = 0
+            processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag, self.colors[self.colorCounter])
+            self.colorCounter+=1
             self.id +=1
             processo.createLabel(self.processTree)
             self.processos.append(processo)
