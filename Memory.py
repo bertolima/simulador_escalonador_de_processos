@@ -31,6 +31,23 @@ class Memory:
         
         return pages
     
+    def findAndFillSpace(self, space, process:Processo): # acha o primeiro espaço livre e preenche com o processo (First Fit)
+        start = 0
+        end = 0
+        for i in range(len(space)):
+            if (end - start) == process.getPaginas():
+                break
+
+            if space[i] == "-":
+                end += 1
+            else:
+                start = i+1
+                end = i+1
+
+        while (start < end):
+            space[start] = process.getId()
+            start += 1
+    
     
     def hasContinuosSpace(self, process:Processo): # calcula se tem espaço contínuo (não fragmentado) na memória 
         start = 0
@@ -58,23 +75,7 @@ class Memory:
             self.memory[i] = "-"
             i+=1
 
-        # usei esse mecanismo de start e end para encontrar o primeiro espaço livre do disco que caiba o processo inteiro, sem fragmentação 
-        
-        start = 0
-        end = 0
-        for i in range(self.diskSize):
-            if (end - start) == process.getPaginas(): # quando achar um espaço, sai do loop
-                break
-            
-            if self.disk[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
-                end += 1
-            else: # se encontrar algo que não seja vazio, reinicia
-                start = i+1
-                end = i+1
-        
-        while (start < end): # itera sobre esse espaço colocando as páginas no disco
-            self.disk[start] = process.getId()
-            start += 1
+        self.findAndFillSpace(self.disk, process)
             
         
     def removeFromDisk(self, process:Processo): # remove processo do disco para levar à memória
@@ -87,58 +88,23 @@ class Memory:
     
     
     def allocateInMemory(self, process:Processo): # aloca o processo na memória
-        print("\n --------- Alocando processo", process.getId(), "na memória ---------- \n")
         if process.getId() in self.memory: # se o processo já tiver na memória, não faz nada
             if self.algorithm == "LRU": # se já estiver na memória e o algoritmo for LRU, coloco ele no final da fila para indicar que foi usado recentemente
-                print("Já está na memória")
-                print('Fila antes:')
-                for i in self.queue:
-                    print(i.getId(), end=" ")
-                print()
-                self.count += 1
                 self.queue.remove(process)
                 self.queue.append(process)
-                print('Fila no após:')
-                for i in self.queue:
-                    print(i.getId(), end=" ")
-                print()
             return
               
         # -- NÃO ESTÁ NA MEMÓRIA --
         
-        print('Fila no momento ', self.count)
-        for i in self.queue:
-            print(i.getId(), end=" ")
-        print()
-        self.count += 1
-        
         self.removeFromDisk(process=process) # tiro o processo do disco para transferir à memória
         
         if self.hasContinuosSpace(process=process): # se tiver espaço contínuo (não fragmentado) suficiente, coloco direto, sem precisar do algoritmo
-            print('Tem espaço contínuo')
             # procura pelo espaço inicial e final da memória, onde o processo será alocado
-            start = 0
-            end = 0
-            for i in range(self.memorySize):
-                if (end - start) == process.getPaginas(): # quando achar um espaço, sai do loop
-                    break
-                
-                if self.memory[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
-                    end += 1
-                else: # se encontrar algo que não seja vazio, reinicia
-                    start = i+1
-                    end = i+1
-            
-            while (start < end): # itera sobre esse espaço colocando as páginas no disco
-                self.memory[start] = process.getId()
-                start += 1
-            
+            self.findAndFillSpace(self.memory, process)
             self.freeSpace -= process.getPaginas() # diminuo o contador de espaço livre na memória
             self.queue.append(process) # adiciono na fila de processos para o FIFO
 
         else:     
-            print('Não tem espaço contínuo')         
-            
             space_to_be_realocated = self.queue[0].getPaginas() # espaço que vou calcular se é suficiente para por o novo processo no lugar
                             
             while(space_to_be_realocated < process.getPaginas()): # se não for suficiente, vou dropar quantos processos forem necessários para caber o novo processo
@@ -151,23 +117,8 @@ class Memory:
             self.queue.popleft() # pop    
             
             # acho o primeiro espaço livre após as remoções da memória
-            start = 0
-            end = 0
-            for i in range(self.memorySize):
-                if (end - start) == process.getPaginas(): # quando achar um espaço, sai do loop
-                    break
-                
-                if self.memory[i] == "-": # vai aumentando a referência de fim conforme acha espaços vazios
-                    end += 1
-                else: # se encontrar algo que não seja vazio, reinicia
-                    start = i+1
-                    end = i+1
-            
-            while (start < end): # itera sobre esse espaço colocando as páginas no disco
-                self.memory[start] = process.getId()
-                start += 1
-            
-            
+            self.find_and_fill_space(self.memory, process)
+
             self.freeSpace -= process.getPaginas() # diminuo o espaço livre
             self.queue.append(process) # adiciono na fila de processos para o FIFO
         
