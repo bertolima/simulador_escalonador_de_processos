@@ -76,20 +76,23 @@ class Processador:
             memoryCurrentState = self.memory.getMemory()
             diskCurrentState = self.memory.getDisk()
             print(diskCurrentState)
+            
             self.memory.allocateInMemory(self.currentProcess)
             for i in range(len(memoryCurrentState)):
                 if memoryCurrentState[i] == "-":
                     self.memoryLabels.append((i, "white", self.time, "-"))
                 elif (memoryCurrentState[i] == self.currentProcess.getId()):                
                     self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
-            
-            
-
             for i in range(len(diskCurrentState)):
                 if diskCurrentState[i] == "-":
                     self.diskLabels.append((i, "white", self.time, "-"))
-                elif (diskCurrentState[i] == self.currentProcess.getId()):                
-                    self.diskLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
+                else: 
+                    self.diskLabels.append((i, self.currentProcess.getColor(), self.time, diskCurrentState[i]))
+            
+            
+            
+
+            
 
     #aqui todo funcionamento do sistema é feito "por debaixo dos panos" e as informações de como deverá ser renderizado
     #ficam dentro das instancias de cada um do processo guardados na fila "LabelList", a partir dessa fila é feita a
