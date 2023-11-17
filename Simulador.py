@@ -33,6 +33,7 @@ class Simulador(Tk):
         self.pageBox = None
         self.slider = None
         self.memoryLabels:list[Label] = []
+        self.diskLabels:list[Label] = []
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
@@ -141,6 +142,7 @@ class Simulador(Tk):
         self.restart()
         self.cpu.resetMemoryLabels()
         self.memoryLabels.clear()
+        self.diskLabels.clear()
 
         #captura a entrada do usuario sobre o quantum e sobrecarga
         self.quantum = int(self.quantum_entry.get())
@@ -160,24 +162,12 @@ class Simulador(Tk):
         x = ( self.screen_width/2) - (180/2)
         y = ( self.screen_height/2) - (self.heigth/2)
         width = len(self.processos) * 40
-        self.processWindow.geometry('%dx%d+%d+%d'%(self.width, width+10, x+self.width/12, y))
+        self.processWindow.geometry('+%d+%d'%(self.width/12, y))
         self.processWindow.title(" Visualização")
 
-        wrapper = LabelFrame(self.processWindow)
-        mycanvas = Canvas(wrapper)
-        mycanvas.pack(side=BOTTOM)
-
-        scrollbar = ttk.Scrollbar(wrapper, orient='horizontal', command=mycanvas.xview)
-        scrollbar.pack(side = BOTTOM, fill=X )
-
-        mycanvas.configure(xscrollcommand=x)
-        mycanvas.bind('<Configure>', lambda e: mycanvas.configure(scrollregion= mycanvas.bbox('all')))
-
-        self.processWindowFrame = ttk.Frame(mycanvas, borderwidth=1, relief="solid")
-        self.processWindowFrame.pack()
-
-        wrapper.pack(fill="both", expand=YES, padx=10, pady=10)
-
+    
+        self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
+        self.processWindowFrame.grid(row=0, column=0)
         
         for i in range (max_time):
             Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
@@ -188,26 +178,39 @@ class Simulador(Tk):
 
         memoryWindow = Toplevel(self.processWindow)
         memoryWindow.geometry('+%d+%d'%(x+self.processWindow.winfo_reqwidth()+self.width/12, y))
-        memoryWindow.title("RAM")
+        memoryWindow.title("RAM e Disco")
         memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
         memoryFrame.pack(padx=3, pady=3)
+        diskFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
+        diskFrame.pack(padx=3, pady=3)
 
         k=0
         for i in range(5):
             for j in range(10):
-                self.memoryLabels.append(Label(memoryFrame, relief="groove", width=3, height=2))
+                self.memoryLabels.append(Label(memoryFrame, relief="groove", text="-", bg="white", width=3, height=2))
                 self.memoryLabels[k].grid(row=i, column=j)
+                k+=1
+
+        k=0
+        for i in range(10):
+            for j in range(20):
+                self.diskLabels.append(Label(diskFrame, relief="groove", text="-", bg="white", width=3, height=2))
+                self.diskLabels[k].grid(row=i, column=j)
                 k+=1
 
 
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
-        def clock(currentTime, processList:list[Processo], memoryList:list):
+        def clock(currentTime, processList:list[Processo], memoryList:list, diskList:list):
             i = 1
             for elem in memoryList:
                     if elem[2] == currentTime:
                         self.memoryLabels[elem[0]].config(text = str(elem[3]), bg = elem[1])
+            
+            for elem in diskList:
+                    if elem[2] == currentTime:
+                        self.diskLabels[elem[0]].config(text = str(elem[3]), bg = elem[1])
 
             for process in processList:
                 labelList = process.getLabelList()
@@ -221,7 +224,7 @@ class Simulador(Tk):
                     Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                 i +=1
             if (currentTime < max_time):
-                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList, memoryList)   #o delay ocorre aqui
+                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList, memoryList, diskList)   #o delay ocorre aqui
             else:
                 k=0
                 for i in range(5):
@@ -236,8 +239,10 @@ class Simulador(Tk):
         def runProcess():
             target = sorted(self.cpu.getEnded(), key=lambda x: x.id)
             targetMemory = sorted(self.cpu.getMemoryLabels(), key = lambda x: x[2])
+            targetDisk = sorted(self.cpu.getDiskLabels(), key = lambda x: x[2])
+        
             time = 0
-            clock(time, target, targetMemory)
+            clock(time, target, targetMemory, targetDisk)
 
         runProcess()
 
