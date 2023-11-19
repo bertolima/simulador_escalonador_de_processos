@@ -5,7 +5,6 @@ from collections import deque
 from Processador import Processador
 
 
-
 class Simulador(Tk):
 
     def __init__(self, width, heigth):
@@ -19,7 +18,7 @@ class Simulador(Tk):
         y = ( self.screen_height/2) - (self.heigth/2)
         self.colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
         self.colorCounter = 0
-        self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y))
+        self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y- self.screen_height/5))
 
 
         self.geometry("700x370")
@@ -159,15 +158,42 @@ class Simulador(Tk):
             max_time = self.EDF()
         
         self.processWindow = Toplevel(self)
-        x = ( self.screen_width/2) - (180/2)
+        x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
-        width = len(self.processos) * 40
-        self.processWindow.geometry('+%d+%d'%(self.width/12, y))
+        height = len(self.processos) * 40
+        self.processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
         self.processWindow.title(" Visualização")
 
+        hframe = ttk.Frame(self.processWindow)
+
+        scrollbar = ttk.Scrollbar(self.processWindow, orient="horizontal")
+        scrollbar.pack(fill=X, side=BOTTOM, expand=False)
+
+        mycanvas = Canvas(hframe, highlightthickness=0, width=680, height=200, xscrollcommand=scrollbar.set)
+        mycanvas.pack(side=TOP, fill=BOTH, expand=True)
+
+        scrollbar.config(command=mycanvas.xview)
+
     
-        self.processWindowFrame = ttk.Frame(self.processWindow, borderwidth=1, relief="solid")
-        self.processWindowFrame.grid(row=0, column=0)
+        self.processWindowFrame = ttk.Frame(mycanvas, borderwidth=1, relief="solid")
+        def configure_interior(event):
+            size = (self.processWindowFrame.winfo_reqwidth(), self.processWindowFrame.winfo_reqheight())
+            mycanvas.config(scrollregion=(0,0,size[0],size[1]))
+            if(self.processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
+                mycanvas.config(height=self.processWindowFrame.winfo_reqheight())
+
+        def configure_canvas(event):
+            if (self.processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
+                mycanvas.itemconfigure(idFrame, height=mycanvas.winfo_reqheight())
+        self.processWindowFrame.bind('<Configure>', configure_interior)
+        mycanvas.bind('<Configure>', configure_canvas)
+        idFrame = mycanvas.create_window(0,0,window = self.processWindowFrame, anchor=NW)
+
+
+        
+        
+
+        hframe.pack()
         
         for i in range (max_time):
             Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
@@ -177,7 +203,7 @@ class Simulador(Tk):
             Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
 
         memoryWindow = Toplevel(self.processWindow)
-        memoryWindow.geometry('+%d+%d'%(x+self.processWindow.winfo_reqwidth()+self.width/12, y))
+        memoryWindow.geometry('+%d+%d'%(x- self.screen_width/5 + 710, y- self.screen_height/5))
         memoryWindow.title("RAM e Disco")
         memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
         memoryFrame.pack(padx=3, pady=3)
