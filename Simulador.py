@@ -11,6 +11,8 @@ class Simulador(Tk):
         super().__init__()
         self.width = width
         self.heigth = heigth
+        self.running = False
+        self.canCreateProcess = True
 
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
@@ -48,7 +50,7 @@ class Simulador(Tk):
         self.selected = []          #aqui ficara o conjunto de processos selecionados pelo usuario (o unico uso é excluir o processo)
         self.processWindowFrame:ttk.Frame = None    #frame para exibição dos processos
         self.box = None     #vai representar a box onde poderemos escolher o algoritmo
-        self.butttons = []      #autoexplicativo
+        self.buttons:dict[str, Button] = {}      #autoexplicativo
         self.id = 0     #o contador unico para o ID dos processos
 
         self.defaultFont = font.nametofont("TkDefaultFont") 
@@ -95,9 +97,12 @@ class Simulador(Tk):
         self.pageBox.place(x=590, y=230, width=100)        
 
     def createButtonsWidget(self):
-        Button(self, text ="START", relief="raised",command=self.startAction).place(x=590, y=330, width=100)
-        Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso).place(x=590, y=10, width=100)
-        Button(self, text ="Excluir Processo", relief="raised",command=self.print_selected).place(x=590, y=45, width=100)
+        self.buttons['START'] = Button(self, text ="START", relief="raised",command=self.startAction)
+        self.buttons['START'].place(x=590, y=330, width=100)
+        self.buttons['CREATE_PROCESS'] = Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso)
+        self.buttons['CREATE_PROCESS'].place(x=590, y=10, width=100)
+        self.buttons['DELETE_PROCESS'] = Button(self, text ="Excluir Processo", relief="raised",command=self.print_selected)
+        self.buttons['DELETE_PROCESS'].place(x=590, y=45, width=100)
 
     def createTextBoxWidget(self):
         chegada_label = ttk.Label(self, text= "Quantum").place(x=610, y=75, width=100)
@@ -136,7 +141,8 @@ class Simulador(Tk):
 
     #esse método é invocado quando apertamos o botao "START"
     def startAction(self):
-        
+
+        self.buttons['START'].config(state=DISABLED)
         #reinicia o estado dos processos
         self.restart()
         self.cpu.resetMemoryLabels()
@@ -160,7 +166,7 @@ class Simulador(Tk):
         self.processWindow = Toplevel(self)
         x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
-        height = len(self.processos) * 40
+        height = (len(self.processos) * 40) + 5
         self.processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
         self.processWindow.title(" Visualização")
 
@@ -188,10 +194,6 @@ class Simulador(Tk):
         self.processWindowFrame.bind('<Configure>', configure_interior)
         mycanvas.bind('<Configure>', configure_canvas)
         idFrame = mycanvas.create_window(0,0,window = self.processWindowFrame, anchor=NW)
-
-
-        
-        
 
         hframe.pack()
         
@@ -257,6 +259,7 @@ class Simulador(Tk):
                     for j in range(10):
                         self.memoryLabels[k].config(text="-", bg="white")
                         k+=1
+                self.buttons['START'].config(state=NORMAL)
 
 
 
@@ -272,60 +275,67 @@ class Simulador(Tk):
 
         runProcess()
 
+        
+
     #método acionado ao clicar no botao "CRIAR PROCESSO"
     def criarProcesso(self):
-        #captura informações da criação do processo digitada pelo usuario
-        def submit():
-            tempoExec = int(exec_entry.get())
-            tempoCheg = int(chegada_entry.get())
-            prio = int(deadline_entry.get())
-            dead = int(prioridade_entry.get())
-            pag = int(pagina_entry.get())
+        if (not self.running):
+            if (self.canCreateProcess):
+                self.canCreateProcess = False
+                #captura informações da criação do processo digitada pelo usuario
+                def submit():
+                    tempoExec = int(exec_entry.get())
+                    tempoCheg = int(chegada_entry.get())
+                    prio = int(deadline_entry.get())
+                    dead = int(prioridade_entry.get())
+                    pag = int(pagina_entry.get())
 
-            if(self.colorCounter == len(self.colors)): self.colorCounter = 0
-            processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag, self.colors[self.colorCounter])
-            self.colorCounter+=1
-            self.id +=1
-            processo.createLabel(self.processTree)
-            self.processos.append(processo)
-            newWindow.destroy()
-        
-        #autoexplicativo
-        def cancel():
-            newWindow.destroy()
-        
+                    if(self.colorCounter == len(self.colors)): self.colorCounter = 0
+                    processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag, self.colors[self.colorCounter])
+                    self.colorCounter+=1
+                    self.id +=1
+                    processo.createLabel(self.processTree)
+                    self.processos.append(processo)
+                    newWindow.destroy()
+                    
+                
+                #autoexplicativo
+                def cancel():
+                    newWindow.destroy()
+                
 
-        #informações da janela criada para adicionar novos processos.
-        newWindow = Toplevel(self)
-        x = ( self.screen_width/2) - (180/2)
-        y = ( self.screen_height/2) - (175/2)
-        newWindow.geometry('%dx%d+%d+%d' % (180, 175, x- self.screen_width/5, y))
-        newWindow.title(" Janela de Criação de Processo")
-        newWindow.geometry("180x175")
+                #informações da janela criada para adicionar novos processos.
+                newWindow = Toplevel(self)
+                x = ( self.screen_width/2) - (180/2)
+                y = ( self.screen_height/2) - (175/2)
+                newWindow.geometry('%dx%d+%d+%d' % (180, 175, x- self.screen_width/5, y))
+                newWindow.title(" Janela de Criação de Processo")
+                newWindow.geometry("180x175")
 
-        exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
-        exec_entry = Entry(newWindow, width=5)
-        exec_entry.place(x=130,y=10)
+                exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
+                exec_entry = Entry(newWindow, width=5)
+                exec_entry.place(x=130,y=10)
 
-        chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
-        chegada_entry = ttk.Entry(newWindow, width=5)
-        chegada_entry.place(x=130,y=35)
+                chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
+                chegada_entry = ttk.Entry(newWindow, width=5)
+                chegada_entry.place(x=130,y=35)
 
-        deadline_label = ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
-        deadline_entry = ttk.Entry(newWindow, width=5)
-        deadline_entry.place(x=130,y=60)
+                deadline_label = ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
+                deadline_entry = ttk.Entry(newWindow, width=5)
+                deadline_entry.place(x=130,y=60)
 
-        prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
-        prioridade_entry = ttk.Entry(newWindow, width=5)
-        prioridade_entry.place(x=130,y=85)
+                prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
+                prioridade_entry = ttk.Entry(newWindow, width=5)
+                prioridade_entry.place(x=130,y=85)
 
-        pagina_label = ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
-        pagina_entry = ttk.Entry(newWindow, width=5)
-        pagina_entry.place(x=130,y=110)
+                pagina_label = ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
+                pagina_entry = ttk.Entry(newWindow, width=5)
+                pagina_entry.place(x=130,y=110)
 
-    
-        submit_button = ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
-        submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
+            
+                submit_button = ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
+                submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
+                self.canCreateProcess = True
 
 
     def FIFO(self):
