@@ -75,7 +75,7 @@ class Processador:
                 self.currentProcessQueue.remove(self.currentProcess)
             memoryCurrentState = self.memory.getMemory()
             diskCurrentState = self.memory.getDisk()
-            print(diskCurrentState)
+
             
             self.memory.allocateInMemory(self.currentProcess)
             for i in range(len(memoryCurrentState)):
