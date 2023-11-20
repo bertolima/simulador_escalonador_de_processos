@@ -36,6 +36,7 @@ class Processador:
         for process in self.queue:
             if(process.getTempoChegada() == self.time):
                 self.currentProcessQueue.append(process)
+                self.memory.allocateInDisk(process)
         for process in self.currentProcessQueue:
             if(self.queue.count(process) > 0):
                 self.queue.remove(process)

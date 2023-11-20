@@ -6,32 +6,17 @@ class Memory:
         
         self.diskSize = 200 # tamanho inicial do Disco
         self.disk = ["-"]*200 # criando array "vazio" ("-" vai representar o vazio)
-        
-        self.pages = self.allocateAllPages(all_processes) # aloco todos os processos no disco
-        
+    
         self.memorySize = 50
         self.memory = ["-"]*50
         
+        self.pages = 0 # contador de páginas n
         self.algorithm = algorithm # FIFO ou LRU
         self.freeSpace = self.memorySize # monitoramento do espaço livre na memória
         self.queue = deque() # fila para gerenciar quando houver page fault
-        self.mode = None
-        self.count = 0
         
-    def allocateAllPages(self, all_processes:dict): # dicionário {Processo: Nº Páginas}
-        pages = 0
         
-        # aloco os processos na ordem da lista 
-        for process in all_processes:
-            process_pages = all_processes[process]
-            for i in range(process_pages):
-                self.disk[i + pages] = process.getId()
-            
-            pages += process_pages 
-        
-        return pages
-    
-    def findAndFillSpace(self, space, process:Processo): # acha o primeiro espaço livre e preenche com o processo (First Fit)
+    def findAndFillSpace(self, space, process:Processo): # acha o primeiro espaço livre e preenche com as páginas processo (First Fit)
         start = 0
         end = 0
         for i in range(len(space)):
@@ -46,9 +31,17 @@ class Memory:
 
         while (start < end):
             space[start] = process.getId()
-            start += 1
+            start += 1    
     
-    
+        
+    def allocateInDisk(self, process:Processo): # aloca o processo no disco
+        if process.getId() in self.disk:
+            return
+        
+        self.findAndFillSpace(self.disk, process)
+        self.pages += process.getPaginas()  
+        
+        
     def hasContinuosSpace(self, process:Processo): # calcula se tem espaço contínuo (não fragmentado) na memória 
         start = 0
         end = 0
@@ -77,6 +70,17 @@ class Memory:
 
         self.findAndFillSpace(self.disk, process)
             
+            
+    def desallocateProcess(self, process:Processo):
+        self.queue.remove(process)
+        for i in range(len(self.memory)):
+            if(self.memory[i] == process.getId()):
+                self.memory[i] = "-"
+
+        for elem in self.disk:
+            if elem == process.getId():
+                elem = "-"
+
         
     def removeFromDisk(self, process:Processo): # remove processo do disco para levar à memória
         i = self.disk.index(process.getId())
@@ -130,14 +134,4 @@ class Memory:
     def getDisk(self):
         return self.disk
     
-    def desallocateProcess(self, process:Processo):
-        self.queue.remove(process)
-        for i in range(len(self.memory)):
-            if(self.memory[i] == process.getId()):
-                self.memory[i] = "-"
-
-        for elem in self.disk:
-            if elem == process.getId():
-                elem = "-"
-
 
