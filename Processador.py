@@ -13,11 +13,18 @@ class Processador:
         self.currentProcess:Processo = None #Simula o processo que esta sendo executado no momento
         self.endedProcess = []  #processos ja finalizados entram aqui
         self.memory = None
+        
+        self.colors = {}
+        colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
+        i = 0
+        while i < 1000:
+            for color in colors:
+                self.colors[i] = color
+                i+=1
+            i+=1
         self.memoryLabels = deque()
         self.diskLabels = deque()
-        
-        
-
+    
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
     def start(self, process_queue:deque[Processo], mode):
@@ -36,7 +43,19 @@ class Processador:
         for process in self.queue:
             if(process.getTempoChegada() == self.time):
                 self.currentProcessQueue.append(process)
+                memoryCurrentState = self.memory.getMemory()
+                diskCurrentState = self.memory.getDisk()
                 self.memory.allocateInDisk(process)
+                for i in range(len(memoryCurrentState)):
+                    if memoryCurrentState[i] == "-":
+                        self.memoryLabels.append((i, "white", self.time, "-"))
+                    elif (memoryCurrentState[i] == process.getId()):                
+                        self.memoryLabels.append((i, self.colors[process.getId()], self.time, process.getId()))
+                for i in range(len(diskCurrentState)):
+                    if diskCurrentState[i] == "-":
+                        self.diskLabels.append((i, "white", self.time, "-"))
+                    else: 
+                        self.diskLabels.append((i, self.colors[diskCurrentState[i]], self.time, diskCurrentState[i]))
         for process in self.currentProcessQueue:
             if(self.queue.count(process) > 0):
                 self.queue.remove(process)
@@ -83,12 +102,12 @@ class Processador:
                 if memoryCurrentState[i] == "-":
                     self.memoryLabels.append((i, "white", self.time, "-"))
                 elif (memoryCurrentState[i] == self.currentProcess.getId()):                
-                    self.memoryLabels.append((i, self.currentProcess.getColor(), self.time, self.currentProcess.getId()))
+                    self.memoryLabels.append((i, self.colors[self.currentProcess.getId()], self.time, self.currentProcess.getId()))
             for i in range(len(diskCurrentState)):
                 if diskCurrentState[i] == "-":
                     self.diskLabels.append((i, "white", self.time, "-"))
                 else: 
-                    self.diskLabels.append((i, self.currentProcess.getColor(), self.time, diskCurrentState[i]))
+                    self.diskLabels.append((i, self.colors[diskCurrentState[i]], self.time, diskCurrentState[i]))
             
             
             
