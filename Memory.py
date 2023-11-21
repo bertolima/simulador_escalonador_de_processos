@@ -83,6 +83,9 @@ class Memory:
 
         
     def removeFromDisk(self, process:Processo): # remove processo do disco para levar à memória
+        if (self.disk.count(process.getId()) == 0):
+            return
+
         i = self.disk.index(process.getId())
         last_page = i + process.getPaginas()
         
