@@ -170,6 +170,12 @@ class Simulador(Tk):
         self.processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
         self.processWindow.title(" Visualização")
 
+        def on_closing():
+            self.buttons['START'].config(state=NORMAL)
+            self.processWindow.destroy()
+
+        self.processWindow.protocol("WM_DELETE_WINDOW", on_closing)
+
         hframe = ttk.Frame(self.processWindow)
 
         scrollbar = ttk.Scrollbar(self.processWindow, orient="horizontal")
