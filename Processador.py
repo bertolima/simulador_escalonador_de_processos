@@ -38,24 +38,29 @@ class Processador:
         self.endedProcess.clear()
         self.checkProcessQueue()
 
+
+    def checkMemoryLabels(self, process, memoryList, diskList):
+        for i in range(len(memoryList)):
+                    if memoryList[i] == "-":
+                        self.memoryLabels.append((i, "white", self.time, "-"))
+                    elif (memoryList[i] == process.getId()):                
+                        self.memoryLabels.append((i, self.colors[process.getId()], self.time, process.getId()))
+        for i in range(len(diskList)):
+            if diskList[i] == "-":
+                self.diskLabels.append((i, "white", self.time, "-"))
+            else: 
+                self.diskLabels.append((i, self.colors[diskList[i]], self.time, diskList[i]))
+
     #checa se naquele clock algum processo chegou a fila real
     def checkProcessQueue(self):
         for process in self.queue:
             if(process.getTempoChegada() == self.time):
                 self.currentProcessQueue.append(process)
-                memoryCurrentState = self.memory.getMemory()
-                diskCurrentState = self.memory.getDisk()
                 self.memory.allocateInDisk(process)
-                for i in range(len(memoryCurrentState)):
-                    if memoryCurrentState[i] == "-":
-                        self.memoryLabels.append((i, "white", self.time, "-"))
-                    elif (memoryCurrentState[i] == process.getId()):                
-                        self.memoryLabels.append((i, self.colors[process.getId()], self.time, process.getId()))
-                for i in range(len(diskCurrentState)):
-                    if diskCurrentState[i] == "-":
-                        self.diskLabels.append((i, "white", self.time, "-"))
-                    else: 
-                        self.diskLabels.append((i, self.colors[diskCurrentState[i]], self.time, diskCurrentState[i]))
+                memoryList = self.memory.getMemory()
+                diskList = self.memory.getDisk()
+                self.checkMemoryLabels(process, memoryList, diskList)
+
         for process in self.currentProcessQueue:
             if(self.queue.count(process) > 0):
                 self.queue.remove(process)
@@ -95,24 +100,8 @@ class Processador:
                 self.currentProcessQueue.remove(self.currentProcess)
             memoryCurrentState = self.memory.getMemory()
             diskCurrentState = self.memory.getDisk()
-
-            
             self.memory.allocateInMemory(self.currentProcess)
-            for i in range(len(memoryCurrentState)):
-                if memoryCurrentState[i] == "-":
-                    self.memoryLabels.append((i, "white", self.time, "-"))
-                elif (memoryCurrentState[i] == self.currentProcess.getId()):                
-                    self.memoryLabels.append((i, self.colors[self.currentProcess.getId()], self.time, self.currentProcess.getId()))
-            for i in range(len(diskCurrentState)):
-                if diskCurrentState[i] == "-":
-                    self.diskLabels.append((i, "white", self.time, "-"))
-                else: 
-                    self.diskLabels.append((i, self.colors[diskCurrentState[i]], self.time, diskCurrentState[i]))
-            
-            
-            
-
-            
+            self.checkMemoryLabels(self.currentProcess, memoryCurrentState, diskCurrentState)            
 
     #aqui todo funcionamento do sistema é feito "por debaixo dos panos" e as informações de como deverá ser renderizado
     #ficam dentro das instancias de cada um do processo guardados na fila "LabelList", a partir dessa fila é feita a
@@ -143,11 +132,14 @@ class Processador:
                     self.memory.desallocateProcess(self.currentProcess)
                     break
             if(not self.currentProcess.isEnded()):
-                self.currentProcess.sobrecarga(self.time)
-                [processo.acumular(self.time) for processo in self.currentProcessQueue]
-                self.time +=1
-                self.checkProcessQueue()
                 self.currentProcessQueue.append(self.currentProcess)
+                while (i > 0):
+                    self.currentProcess.sobrecarga(self.time)
+                    [processo.acumular(self.time) for processo in self.currentProcessQueue]
+                    self.time +=1
+                    self.checkProcessQueue()
+                    i -= 1
+                i = sobrecarga
                 
             else:
                 ret = self.currentProcess.getTempoTotal()
@@ -180,11 +172,15 @@ class Processador:
                     self.memory.desallocateProcess(self.currentProcess)
                     break
             if(not self.currentProcess.isEnded()):
-                self.currentProcess.sobrecarga(self.time)
-                [processo.acumular(self.time) for processo in self.currentProcessQueue]
-                self.time +=1
-                self.checkProcessQueue()
                 self.currentProcessQueue.append(self.currentProcess)
+                while (i > 0):
+                    self.currentProcess.sobrecarga(self.time)
+                    [processo.acumular(self.time) for processo in self.currentProcessQueue]
+                    self.time +=1
+                    self.checkProcessQueue()
+                    
+                    i -= 1
+                i = sobrecarga
             else:
                 self.endedProcess.append(self.currentProcess)
                 ret = self.currentProcess.getTempoTotal()
