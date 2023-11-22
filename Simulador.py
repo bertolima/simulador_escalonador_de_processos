@@ -37,14 +37,17 @@ class Simulador(Tk):
         self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y- self.screen_height/5))
         self.title("Escalonador de processos")
         
-        #iniciar as variavels como None é como usar um NULLPOINTER, é interessante pra inicializar atributos de classes.
+        #widgets do tkinter
         self.widgets = {}
+        self.buttons:dict[str, Button] = {}      #autoexplicativo
+
+        #iniciar as variavels como None é como usar um NULLPOINTER, é interessante pra inicializar atributos de classes.
         self.quantum = None
         self.sobrecarga = None
         self.quantum_entry = None
         self.sobrecarga_entry = None
-        self.pageBox = None
-        self.slider = None
+
+        #lista de labels que vai ser percorrida pra mostrar as informações na tela
         self.memoryLabels:list[Label] = []
         self.diskLabels:list[Label] = []
 
@@ -55,12 +58,7 @@ class Simulador(Tk):
         self.processos.append(Processo(2, 4,1, 8, 1,5))
         self.processos.append(Processo(3, 6, 3, 10, 1, 10))
         
-        self.processWindow = None   #janela onde a execução dos processos será mostrada
-        self.processTree = None     #arvore de exibição dos processos na main window
-        self.selected = []          #aqui ficara o conjunto de processos selecionados pelo usuario (o unico uso é excluir o processo)
-        self.processWindowFrame:ttk.Frame = None    #frame para exibição dos processos
-        self.box = None     #vai representar a box onde poderemos escolher o algoritmo
-        self.buttons:dict[str, Button] = {}      #autoexplicativo
+        self.selected = []    #aqui ficara o conjunto de processos selecionados pelo usuario (o unico uso é excluir o processo)
         self.id = 0     #o contador unico para o ID dos processos
 
         self.defaultFont = font.nametofont("TkDefaultFont") 
@@ -94,24 +92,23 @@ class Simulador(Tk):
         self.widgets['TREEVIEW'].heading("paginas", text="Nº Paginas")
         self.widgets['TREEVIEW'].grid(row=0, column=0, padx=10, pady=10)
         
-
     def createBoxWidgets(self):
         Label(self, text="Algoritmos", width=11).place(x=598,y=160)
         algoritmos_processos = ["FIFO", "RoundRobin", "SJF", "EDF"]
-        self.box = ttk.Combobox(self, values=algoritmos_processos)
-        self.box.place(x=590,y=180, width=100)
+        self.widgets['BOX_ALGORITMOS'] = ttk.Combobox(self, values=algoritmos_processos)
+        self.widgets['BOX_ALGORITMOS'].place(x=590,y=180, width=100)
         
         Label(self, text="Paginação", width=11).place(x=598,y=210)
         algoritmos_paginacao = ["FIFO", "LRU"]
-        self.pageBox = ttk.Combobox(self, values=algoritmos_paginacao)
-        self.pageBox.place(x=590, y=230, width=100)        
+        self.widgets['BOX_PAGINAS'] = ttk.Combobox(self, values=algoritmos_paginacao)
+        self.widgets['BOX_PAGINAS'].place(x=590, y=230, width=100)        
 
     def createButtonsWidget(self):
         self.buttons['START'] = Button(self, text ="START", relief="raised",command=self.startAction)
         self.buttons['START'].place(x=590, y=330, width=100)
         self.buttons['CREATE_PROCESS'] = Button(self, text ="Criar Processo", relief="raised", command=self.criarProcesso)
         self.buttons['CREATE_PROCESS'].place(x=590, y=10, width=100)
-        self.buttons['DELETE_PROCESS'] = Button(self, text ="Excluir Processo", relief="raised",command=self.print_selected)
+        self.buttons['DELETE_PROCESS'] = Button(self, text ="Excluir Processo", relief="raised",command=self.delete_selected)
         self.buttons['DELETE_PROCESS'].place(x=590, y=45, width=100)
 
     def createTextBoxWidget(self):
@@ -124,16 +121,16 @@ class Simulador(Tk):
         self.sobrecarga_entry.place(x=590, y=135, width=100)
         
     def createSlider(self):
-        self.slider = Scale(self, from_=0.125, to=2,
+        self.widgets['SLIDER'] = Scale(self, from_=0.125, to=2,
                             orient=HORIZONTAL, resolution=0.125, digits=4)
-        self.slider.set(0.700)
-        self.slider.place(x=590, y=260, width=100)
+        self.widgets['SLIDER'].set(0.700)
+        self.widgets['SLIDER'].place(x=590, y=260, width=100)
         ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
     def on_select(self, event):
         self.selected = event.widget.selection()
     
-    def print_selected(self):
+    def delete_selected(self):
         need_delection = []
         for idx in self.selected:
             need_delection.append(self.widgets['TREEVIEW'].item(idx)['values'][0])
@@ -163,7 +160,7 @@ class Simulador(Tk):
         self.quantum = int(self.quantum_entry.get())
         self.sobrecarga = int(self.sobrecarga_entry.get())
 
-        action = self.box.get()
+        action = self.widgets['BOX_ALGORITMOS'].get()
         if(action == "FIFO"):
             max_time = self.FIFO()
         elif(action == "SJF"):
@@ -173,22 +170,22 @@ class Simulador(Tk):
         elif(action == "EDF"):
             max_time = self.EDF()
         
-        self.processWindow = Toplevel(self)
+        processWindow = Toplevel(self)
         x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
         height = (len(self.processos) * 33) + 50
-        self.processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
-        self.processWindow.title(" Visualização")
+        processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
+        processWindow.title(" Visualização")
 
         def on_closing():
             self.buttons['START'].config(state=NORMAL)
-            self.processWindow.destroy()
+            processWindow.destroy()
 
-        self.processWindow.protocol("WM_DELETE_WINDOW", on_closing)
+        processWindow.protocol("WM_DELETE_WINDOW", on_closing)
 
-        hframe = ttk.Frame(self.processWindow)
+        hframe = ttk.Frame(processWindow)
 
-        scrollbar = ttk.Scrollbar(self.processWindow, orient="horizontal")
+        scrollbar = ttk.Scrollbar(processWindow, orient="horizontal")
         scrollbar.pack(fill=X, side=BOTTOM, expand=False)
 
         mycanvas = Canvas(hframe, highlightthickness=0, width=680, height=200, xscrollcommand=scrollbar.set)
@@ -248,7 +245,7 @@ class Simulador(Tk):
 
             x = ( self.screen_width/2) - (40/2)
             y = ( self.screen_height/2) - (40/2)
-            turnaround_screen = Toplevel(self.processWindow)
+            turnaround_screen = Toplevel(processWindow)
             turnaround_screen.geometry('%dx%d+%d+%d' % (40, 40, x, y))
             ttk.Label(turnaround_screen, text='Turnaround:'+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
             ttk.Button(turnaround_screen, text="OK", command=close_window).pack(expand=True)
@@ -278,7 +275,7 @@ class Simulador(Tk):
                     Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                 i +=1
             if (currentTime < max_time):
-                self.processWindowFrame.after(int(1000* self.slider.get()), clock, currentTime+1, processList, memoryList, diskList)   #o delay ocorre aqui
+                self.processWindowFrame.after(int(1000* self.widgets['SLIDER'].get()), clock, currentTime+1, processList, memoryList, diskList)   #o delay ocorre aqui
             else:
                 k=0
                 for i in range(5):
@@ -287,8 +284,6 @@ class Simulador(Tk):
                         k+=1
                 turnaround()
                 self.buttons['START'].config(state=NORMAL)
-
-
 
         #serve pra chamar a função que renderizar as informações dos processos na tela
         #precisamos ordenar a lista de processos pelo ID antes, para que seja mostrado corretamente na tela
@@ -302,69 +297,59 @@ class Simulador(Tk):
 
         runProcess()
 
-        
-
     #método acionado ao clicar no botao "CRIAR PROCESSO"
     def criarProcesso(self):
-        if (not self.running):
-            if (self.canCreateProcess):
-                self.canCreateProcess = False
-                #captura informações da criação do processo digitada pelo usuario
-                def submit():
-                    tempoExec = int(exec_entry.get())
-                    tempoCheg = int(chegada_entry.get())
-                    prio = int(deadline_entry.get())
-                    dead = int(prioridade_entry.get())
-                    pag = int(pagina_entry.get())
+        #captura informações da criação do processo digitada pelo usuario
+        def submit():
+            tempoExec = int(exec_entry.get())
+            tempoCheg = int(chegada_entry.get())
+            prio = int(deadline_entry.get())
+            dead = int(prioridade_entry.get())
+            pag = int(pagina_entry.get())
 
-                    processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag)
-                    self.id +=1
-                    processo.createLabel(self.widgets['TREEVIEW'])
-                    self.processos.append(processo)
-                    newWindow.destroy()
-                    
-                
-                #autoexplicativo
-                def cancel():
-                    newWindow.destroy()
-                
+            processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag)
+            self.id +=1
+            processo.createLabel(self.widgets['TREEVIEW'])
+            self.processos.append(processo)
+            newWindow.destroy()
 
-                #informações da janela criada para adicionar novos processos.
-                newWindow = Toplevel(self)
-                x = ( self.screen_width/2) - (180/2)
-                y = ( self.screen_height/2) - (175/2)
-                newWindow.geometry('%dx%d+%d+%d' % (180, 175, x- self.screen_width/5, y))
-                newWindow.title(" Janela de Criação de Processo")
-                newWindow.geometry("180x175")
-
-                exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
-                exec_entry = Entry_int(newWindow, width=5)
-                exec_entry.place(x=130,y=10)
-
-                chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
-                chegada_entry = ttk.Entry_int(newWindow, width=5)
-                chegada_entry.place(x=130,y=35)
-
-                deadline_label = ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
-                deadline_entry = ttk.Entry_int(newWindow, width=5)
-                deadline_entry.place(x=130,y=60)
-
-                prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
-                prioridade_entry = ttk.Entry_int(newWindow, width=5)
-                prioridade_entry.place(x=130,y=85)
-
-                pagina_label = ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
-                pagina_entry = ttk.Entry_int(newWindow, width=5)
-                pagina_entry.place(x=130,y=110)
-
+        #autoexplicativo
+        def cancel():
+            newWindow.destroy()
             
-                submit_button = ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
-                submit_button = ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
-                self.canCreateProcess = True
+        #informações da janela criada para adicionar novos processos.
+        newWindow = Toplevel(self)
+        x = ( self.screen_width/2) - (180/2)
+        y = ( self.screen_height/2) - (175/2)
+        newWindow.geometry('%dx%d+%d+%d' % (180, 175, x- self.screen_width/5, y))
+        newWindow.title(" Janela de Criação de Processo")
+        newWindow.geometry("180x175")
 
+        ttk.Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
+        exec_entry = Entry_int(newWindow, width=5)
+        exec_entry.place(x=130,y=10)
+
+        ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
+        chegada_entry = Entry_int(newWindow, width=5)
+        chegada_entry.place(x=130,y=35)
+
+        ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
+        deadline_entry = Entry_int(newWindow, width=5)
+        deadline_entry.place(x=130,y=60)
+
+        ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
+        prioridade_entry = Entry_int(newWindow, width=5)
+        prioridade_entry.place(x=130,y=85)
+
+        ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
+        pagina_entry = Entry_int(newWindow, width=5)
+        pagina_entry.place(x=130,y=110)
+
+        ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
+        ttk.Button(newWindow, text="Cancelar", command=cancel).place(x=10,y=140, width=70)
 
     def FIFO(self):
-        self.cpu.start(self.processos, self.pageBox.get())
+        self.cpu.start(self.processos, self.widgets['BOX_PAGINAS'].get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -374,9 +359,8 @@ class Simulador(Tk):
                 self.cpu.calculateProcessTime(mode= "FIFO",)
         return self.cpu.getTime()
         
-
     def RoundRobin(self):
-        self.cpu.start(self.processos, self.pageBox.get())
+        self.cpu.start(self.processos, self.widgets['BOX_PAGINAS'].get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -386,10 +370,8 @@ class Simulador(Tk):
                 self.cpu.calculateProcessTime(mode= "RR", quantum=self.quantum, sobrecarga=self.sobrecarga)
         return self.cpu.getTime()
             
-        
-
     def SJF(self):
-        self.cpu.start(self.processos, self.pageBox.get())
+        self.cpu.start(self.processos, self.widgets['BOX_PAGINAS'].get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
@@ -398,10 +380,9 @@ class Simulador(Tk):
                 self.cpu.chooseProcess(lower=True)
                 self.cpu.calculateProcessTime(mode= "SJF", quantum=self.quantum, sobrecarga=self.sobrecarga)
         return self.cpu.getTime()
-        
 
     def EDF(self):
-        self.cpu.start(self.processos, self.pageBox.get())
+        self.cpu.start(self.processos, self.widgets['BOX_PAGINAS'].get())
         while(not self.cpu.isEnded()):
             if(self.cpu.isQueueEmpty()):
                 self.cpu.setTime(self.cpu.getTime() + 1)
