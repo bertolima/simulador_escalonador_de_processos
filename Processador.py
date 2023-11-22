@@ -13,7 +13,7 @@ class Processador:
         self.currentProcess:Processo = None #Simula o processo que esta sendo executado no momento
         self.endedProcess = []  #processos ja finalizados entram aqui
         self.memory = None
-        
+        self.turnaround = 0
         self.colors = {}
         colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
         i = 0
@@ -113,6 +113,7 @@ class Processador:
                     [processo.acumular(time=self.time) for processo in self.currentProcessQueue]
                     self.time += 1
                     self.checkProcessQueue()
+                self.turnaround += self.currentProcess.getTempoTotal()
                 self.endedProcess.append(self.currentProcess)
                 self.memory.desallocateProcess(self.currentProcess)
                 self.currentProcess = None
@@ -120,7 +121,6 @@ class Processador:
         elif (mode == "RR"):
             i = sobrecarga
             j = quantum
-            turnaround = 0
             while(j > 0):
                 j -= 1
                 self.currentProcess.executar(self.time)
@@ -128,6 +128,7 @@ class Processador:
                 self.time += 1
                 self.checkProcessQueue()
                 if(self.currentProcess.isEnded()):
+                    self.turnaround += self.currentProcess.getTempoTotal()
                     self.endedProcess.append(self.currentProcess)
                     self.memory.desallocateProcess(self.currentProcess)
                     break
@@ -135,7 +136,7 @@ class Processador:
                 self.currentProcessQueue.append(self.currentProcess)
                 while (i > 0):
                     self.currentProcess.sobrecarga(self.time)
-                    [processo.acumular(self.time) for processo in self.currentProcessQueue]
+                    [processo.acumular(self.time) for processo in self.currentProcessQueue if processo != self.currentProcess]
                     self.time +=1
                     self.checkProcessQueue()
                     i -= 1
@@ -154,6 +155,7 @@ class Processador:
                 [processo.acumular(time=self.time) for processo in self.currentProcessQueue]
                 self.time += 1
                 self.checkProcessQueue()
+            self.turnaround += self.currentProcess.getTempoTotal()
             self.endedProcess.append(self.currentProcess)
             self.memory.desallocateProcess(self.currentProcess)
             self.currentProcess = None
@@ -175,13 +177,14 @@ class Processador:
                 self.currentProcessQueue.append(self.currentProcess)
                 while (i > 0):
                     self.currentProcess.sobrecarga(self.time)
-                    [processo.acumular(self.time) for processo in self.currentProcessQueue]
+                    [processo.acumular(self.time) for processo in self.currentProcessQueue if processo != self.currentProcess]
                     self.time +=1
                     self.checkProcessQueue()
                     
                     i -= 1
                 i = sobrecarga
             else:
+                self.turnaround += self.currentProcess.getTempoTotal()
                 self.endedProcess.append(self.currentProcess)
                 ret = self.currentProcess.getTempoTotal()
                 self.currentProcess = None
@@ -217,6 +220,12 @@ class Processador:
 
     def getDiskLabels(self):
         return self.diskLabels
+    
+    def getTurnaround(self):
+        return self.turnaround
+    
+    def resetTurnaround(self):
+        self.turnaround = 0
 
 
 
