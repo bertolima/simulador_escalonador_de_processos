@@ -15,6 +15,13 @@ class Processador:
         self.memory = None
         self.turnaround = 0
         self.colors = {}
+        self.initColors()
+        
+        self.memoryLabels = deque()
+        self.diskLabels = deque()
+    
+
+    def initColors(self):
         colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
         i = 0
         while i < 1000:
@@ -22,9 +29,7 @@ class Processador:
                 self.colors[i] = color
                 i+=1
             i+=1
-        self.memoryLabels = deque()
-        self.diskLabels = deque()
-    
+
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
     def start(self, process_queue:deque[Processo], mode):
