@@ -72,6 +72,8 @@ class Memory:
             
             
     def desallocateProcess(self, process:Processo):
+        if (not Processo in self.queue):
+            return
         self.queue.remove(process)
         for i in range(len(self.memory)):
             if(self.memory[i] == process.getId()):
