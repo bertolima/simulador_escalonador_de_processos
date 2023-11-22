@@ -4,29 +4,41 @@ from tkinter import ttk, font
 from collections import deque
 from Processador import Processador
 
+class Entry_int(ttk.Entry):
+    def __init__(self, master=None, **kwargs):
+        self.var = StringVar()
+        ttk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
+        self.old_value = ''
+        self.var.trace('w', self.check)
+        self.get, self.set = self.var.get, self.var.set
+
+    def check(self, *args):
+        if self.get().isdigit(): 
+            # the current value is only digits; allow this
+            self.old_value = self.get()
+        else:
+            # there's non-digit characters in the input; reject this 
+            self.set(self.old_value)
+
 
 class Simulador(Tk):
 
     def __init__(self, width, heigth):
         super().__init__()
+
         self.width = width
         self.heigth = heigth
-        self.running = False
-        self.canCreateProcess = True
 
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
+
         x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
-        self.colors = ['gray', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'purple']
-        self.colorCounter = 0
         self.geometry('%dx%d+%d+%d' % (self.width, self.heigth, x- self.screen_width/5, y- self.screen_height/5))
-
-
-        self.geometry("700x370")
         self.title("Escalonador de processos")
         
         #iniciar as variavels como None é como usar um NULLPOINTER, é interessante pra inicializar atributos de classes.
+        self.widgets = {}
         self.quantum = None
         self.sobrecarga = None
         self.quantum_entry = None
@@ -38,12 +50,10 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
-        self.processos.append(Processo(0, 0, 7, 1, 1, 11, self.colors[0]))
-        self.processos.append(Processo(1, 2, 8, 1, 1, 8, self.colors[1]))
-        self.processos.append(Processo(2, 4,9, 1, 1,5, self.colors[2]))
-        self.processos.append(Processo(3, 6, 6, 1, 1, 10, self.colors[3]))
-        self.processos.append(Processo(4, 8, 5, 1, 1, 10, self.colors[4]))
-        self.processos.append(Processo(5, 10, 3, 1, 1, 10, self.colors[5]))
+        self.processos.append(Processo(0, 0, 4, 7, 1, 11))
+        self.processos.append(Processo(1, 2, 2, 5, 1, 8))
+        self.processos.append(Processo(2, 4,1, 8, 1,5))
+        self.processos.append(Processo(3, 6, 3, 10, 1, 10))
         
         self.processWindow = None   #janela onde a execução dos processos será mostrada
         self.processTree = None     #arvore de exibição dos processos na main window
@@ -60,7 +70,6 @@ class Simulador(Tk):
                                    slant='roman') 
         self.initWidgets()      #inicializa todos os widgets principais da aplicação
         
-
     def initWidgets(self):
         self.createTreeWidget()
         self.createBoxWidgets()
@@ -69,21 +78,22 @@ class Simulador(Tk):
         self.createSlider()
 
     def createTreeWidget(self):
-        self.processTree = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings", height=16)
-        self.processTree.bind("<<TreeviewSelect>>", self.on_select)
-        self.processTree.column("id", minwidth=0, width=30)
-        self.processTree.column("chegada", minwidth=0, width=120)
-        self.processTree.column("exec", minwidth=0, width=120)
-        self.processTree.column("prio", minwidth=0, width=100)
-        self.processTree.column("deadline", minwidth=0, width=100)
-        self.processTree.column("paginas", minwidth=0, width=100)
-        self.processTree.heading("id", text="ID")
-        self.processTree.heading("chegada", text="Tempo de Chegada")
-        self.processTree.heading("exec", text="Tempo de Execução")
-        self.processTree.heading("prio", text="Prioridade")
-        self.processTree.heading("deadline", text="Deadline")
-        self.processTree.heading("paginas", text="Nº Paginas")
-        self.processTree.grid(row=0, column=0, padx=10, pady=10)
+        self.widgets['TREEVIEW'] = ttk.Treeview(self, columns=("id","chegada", "exec", "prio", "deadline", "paginas"), show="headings", height=16)
+        self.widgets['TREEVIEW'].bind("<<TreeviewSelect>>", self.on_select)
+        self.widgets['TREEVIEW'].column("id", minwidth=0, width=30)
+        self.widgets['TREEVIEW'].column("chegada", minwidth=0, width=120)
+        self.widgets['TREEVIEW'].column("exec", minwidth=0, width=120)
+        self.widgets['TREEVIEW'].column("prio", minwidth=0, width=100)
+        self.widgets['TREEVIEW'].column("deadline", minwidth=0, width=100)
+        self.widgets['TREEVIEW'].column("paginas", minwidth=0, width=100)
+        self.widgets['TREEVIEW'].heading("id", text="ID")
+        self.widgets['TREEVIEW'].heading("chegada", text="Tempo de Chegada")
+        self.widgets['TREEVIEW'].heading("exec", text="Tempo de Execução")
+        self.widgets['TREEVIEW'].heading("prio", text="Prioridade")
+        self.widgets['TREEVIEW'].heading("deadline", text="Deadline")
+        self.widgets['TREEVIEW'].heading("paginas", text="Nº Paginas")
+        self.widgets['TREEVIEW'].grid(row=0, column=0, padx=10, pady=10)
+        
 
     def createBoxWidgets(self):
         Label(self, text="Algoritmos", width=11).place(x=598,y=160)
@@ -105,12 +115,12 @@ class Simulador(Tk):
         self.buttons['DELETE_PROCESS'].place(x=590, y=45, width=100)
 
     def createTextBoxWidget(self):
-        chegada_label = ttk.Label(self, text= "Quantum").place(x=610, y=75, width=100)
-        self.quantum_entry = ttk.Entry(self, width=5)
+        ttk.Label(self, text= "Quantum").place(x=610, y=78, width=100)
+        self.quantum_entry = Entry_int(self, width=5)
         self.quantum_entry.place(x=590, y=95, width=100)
 
-        exec_label = Label(self, text= "Sobrecarga").place(x=590, y=115, width=100)
-        self.sobrecarga_entry = Entry(self, width=5)
+        ttk.Label(self, text= "Sobrecarga").place(x=605, y=118, width=100)
+        self.sobrecarga_entry = Entry_int(self, width=5)
         self.sobrecarga_entry.place(x=590, y=135, width=100)
         
     def createSlider(self):
@@ -118,7 +128,7 @@ class Simulador(Tk):
                             orient=HORIZONTAL, resolution=0.125, digits=4)
         self.slider.set(0.700)
         self.slider.place(x=590, y=260, width=100)
-        segundos_label = ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
+        ttk.Label(self, text= "Segundos").place(x=612, y=300, width=95)
     
     def on_select(self, event):
         self.selected = event.widget.selection()
@@ -126,7 +136,7 @@ class Simulador(Tk):
     def print_selected(self):
         need_delection = []
         for idx in self.selected:
-            need_delection.append(self.processTree.item(idx)['values'][0])
+            need_delection.append(self.widgets['TREEVIEW'].item(idx)['values'][0])
         
         for element in need_delection:
             selected = None
@@ -136,8 +146,8 @@ class Simulador(Tk):
                     break
             if (selected is not None):
                 self.processos.remove(selected)
-                selectedVaribale = self.processTree.selection()
-                self.processTree.delete(selectedVaribale)
+                selectedVaribale = self.widgets['TREEVIEW'].selection()
+                self.widgets['TREEVIEW'].delete(selectedVaribale)
 
     #esse método é invocado quando apertamos o botao "START"
     def startAction(self):
@@ -166,7 +176,7 @@ class Simulador(Tk):
         self.processWindow = Toplevel(self)
         x = ( self.screen_width/2) - (self.width/2)
         y = ( self.screen_height/2) - (self.heigth/2)
-        height = (len(self.processos) * 40) + 5
+        height = (len(self.processos) * 33) + 50
         self.processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
         self.processWindow.title(" Visualização")
 
@@ -232,7 +242,17 @@ class Simulador(Tk):
                 self.diskLabels[k].grid(row=i, column=j)
                 k+=1
 
+        def turnaround():
+            def close_window():
+                turnaround_screen.destroy()
 
+            x = ( self.screen_width/2) - (40/2)
+            y = ( self.screen_height/2) - (40/2)
+            turnaround_screen = Toplevel(self.processWindow)
+            turnaround_screen.geometry('%dx%d+%d+%d' % (40, 40, x, y))
+            ttk.Label(turnaround_screen, text='Turnaround:'+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
+            ttk.Button(turnaround_screen, text="OK", command=close_window).pack(expand=True)
+            print(turnaround_screen.winfo_width(), turnaround_screen.winfo_height())
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
@@ -265,6 +285,7 @@ class Simulador(Tk):
                     for j in range(10):
                         self.memoryLabels[k].config(text="-", bg="white")
                         k+=1
+                turnaround()
                 self.buttons['START'].config(state=NORMAL)
 
 
@@ -296,11 +317,9 @@ class Simulador(Tk):
                     dead = int(prioridade_entry.get())
                     pag = int(pagina_entry.get())
 
-                    if(self.colorCounter == len(self.colors)): self.colorCounter = 0
-                    processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag, self.colors[self.colorCounter])
-                    self.colorCounter+=1
+                    processo = Processo(self.id, tempoCheg, tempoExec, prio, dead, pag)
                     self.id +=1
-                    processo.createLabel(self.processTree)
+                    processo.createLabel(self.widgets['TREEVIEW'])
                     self.processos.append(processo)
                     newWindow.destroy()
                     
@@ -319,23 +338,23 @@ class Simulador(Tk):
                 newWindow.geometry("180x175")
 
                 exec_label = Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
-                exec_entry = Entry(newWindow, width=5)
+                exec_entry = Entry_int(newWindow, width=5)
                 exec_entry.place(x=130,y=10)
 
                 chegada_label = ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
-                chegada_entry = ttk.Entry(newWindow, width=5)
+                chegada_entry = ttk.Entry_int(newWindow, width=5)
                 chegada_entry.place(x=130,y=35)
 
                 deadline_label = ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
-                deadline_entry = ttk.Entry(newWindow, width=5)
+                deadline_entry = ttk.Entry_int(newWindow, width=5)
                 deadline_entry.place(x=130,y=60)
 
                 prioridade_label = ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
-                prioridade_entry = ttk.Entry(newWindow, width=5)
+                prioridade_entry = ttk.Entry_int(newWindow, width=5)
                 prioridade_entry.place(x=130,y=85)
 
                 pagina_label = ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
-                pagina_entry = ttk.Entry(newWindow, width=5)
+                pagina_entry = ttk.Entry_int(newWindow, width=5)
                 pagina_entry.place(x=130,y=110)
 
             
