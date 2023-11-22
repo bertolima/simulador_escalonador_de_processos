@@ -29,7 +29,6 @@ class Processador:
                 self.colors[i] = color
                 i+=1
             i+=1
-
     #Note que todos esses mini-métodos se referem a apenas UM CLOCK, sendo a unidade clock igual a 1 segundo
     #Inicia a execução do processador com clock = 0 e a fila de processos zerada    
     def start(self, process_queue:deque[Processo], mode):
