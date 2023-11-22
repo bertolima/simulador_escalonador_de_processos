@@ -194,30 +194,30 @@ class Simulador(Tk):
         scrollbar.config(command=mycanvas.xview)
 
     
-        self.processWindowFrame = ttk.Frame(mycanvas, borderwidth=1, relief="solid")
+        processWindowFrame = ttk.Frame(mycanvas, borderwidth=1, relief="solid")
         def configure_interior(event):
-            size = (self.processWindowFrame.winfo_reqwidth(), self.processWindowFrame.winfo_reqheight())
+            size = (processWindowFrame.winfo_reqwidth(), processWindowFrame.winfo_reqheight())
             mycanvas.config(scrollregion=(0,0,size[0],size[1]))
-            if(self.processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
-                mycanvas.config(height=self.processWindowFrame.winfo_reqheight())
+            if(processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
+                mycanvas.config(height=processWindowFrame.winfo_reqheight())
 
         def configure_canvas(event):
-            if (self.processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
+            if (processWindowFrame.winfo_reqheight() != mycanvas.winfo_reqheight()):
                 mycanvas.itemconfigure(idFrame, height=mycanvas.winfo_reqheight())
-        self.processWindowFrame.bind('<Configure>', configure_interior)
+        processWindowFrame.bind('<Configure>', configure_interior)
         mycanvas.bind('<Configure>', configure_canvas)
-        idFrame = mycanvas.create_window(0,0,window = self.processWindowFrame, anchor=NW)
+        idFrame = mycanvas.create_window(0,0,window = processWindowFrame, anchor=NW)
 
         hframe.pack()
         
         for i in range (max_time):
-            Label(self.processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
+            Label(processWindowFrame,text=str(i), relief="groove", width=3).grid(row=0, column=i+1,ipady=5, pady=2)
 
         target:deque[Processo] = sorted(self.cpu.getEnded(), key=lambda x: x.id)
         for i in range(1, len(target)+1):
-            Label(self.processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
+            Label(processWindowFrame, text="Processo "+ str(target[i-1].getId()), relief="groove").grid(row=i, column=0, ipady=5, ipadx=10, pady=1, padx= 2)
 
-        memoryWindow = Toplevel(self.processWindow)
+        memoryWindow = Toplevel(processWindow)
         memoryWindow.geometry('+%d+%d'%(x- self.screen_width/5 + 710, y- self.screen_height/5))
         memoryWindow.title("RAM e Disco")
         memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
@@ -249,7 +249,6 @@ class Simulador(Tk):
             turnaround_screen.geometry('%dx%d+%d+%d' % (40, 40, x, y))
             ttk.Label(turnaround_screen, text='Turnaround:'+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
             ttk.Button(turnaround_screen, text="OK", command=close_window).pack(expand=True)
-            print(turnaround_screen.winfo_width(), turnaround_screen.winfo_height())
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
@@ -268,14 +267,14 @@ class Simulador(Tk):
                 ver = True
                 for element in labelList:
                     if element[1] == currentTime:
-                        Label(self.processWindowFrame, background=element[0], relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
+                        Label(processWindowFrame, background=element[0], relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                         ver = False
                         break
                 if(ver and currentTime < max_time):
-                    Label(self.processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
+                    Label(processWindowFrame, background="gray", relief="ridge", width=3).grid(row=i, column=currentTime+1, ipady=5, sticky=EW)
                 i +=1
             if (currentTime < max_time):
-                self.processWindowFrame.after(int(1000* self.widgets['SLIDER'].get()), clock, currentTime+1, processList, memoryList, diskList)   #o delay ocorre aqui
+                processWindowFrame.after(int(1000* self.widgets['SLIDER'].get()), clock, currentTime+1, processList, memoryList, diskList)   #o delay ocorre aqui
             else:
                 k=0
                 for i in range(5):
