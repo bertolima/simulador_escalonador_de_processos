@@ -2,7 +2,7 @@ from tkinter import *
 
 class Processo:
 
-    def __init__(self, identifier, tempoChegada:int, tempoExec:int, deadline:int, prioridade:int, paginas:int, color:str):
+    def __init__(self, identifier, tempoChegada:int, tempoExec:int, deadline:int, prioridade:int, paginas:int):
         #variaveis autoexplicativas
         self.id = identifier
         self.tempoChegada = tempoChegada
@@ -11,7 +11,6 @@ class Processo:
         self.prioridade = prioridade
         self.paginas = paginas
         self.tempoTotal = 0
-        self.color = color
 
         #aqui é o calculado o tempo restante que o processo tem a ser executado
         self.tempoExecVar = tempoExec
@@ -38,7 +37,6 @@ class Processo:
         self.tempoExecVar -= 1
         self.tempoTotal += 1
         self.labelList.append(("green", time, self.id))
-    
     
     #checa se aquele processo já acabou
     def isEnded(self):
@@ -82,8 +80,4 @@ class Processo:
     
     def getPaginas(self):
         return self.paginas
-    
-    def getColor(self):
-        return self.color
-
 
