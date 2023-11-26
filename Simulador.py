@@ -4,21 +4,8 @@ from tkinter import ttk, font
 from collections import deque
 from Processador import Processador
 
-class Entry_int(ttk.Entry):
-    def __init__(self, master=None, **kwargs):
-        self.var = StringVar()
-        ttk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
-        self.old_value = ''
-        self.var.trace('w', self.check)
-        self.get, self.set = self.var.get, self.var.set
-
-    def check(self, *args):
-        if self.get().isdigit(): 
-            # the current value is only digits; allow this
-            self.old_value = self.get()
-        else:
-            # there's non-digit characters in the input; reject this 
-            self.set(self.old_value)
+def validate_entry(text):
+    return text.isdecimal()
 
 
 class Simulador(Tk):
@@ -109,11 +96,16 @@ class Simulador(Tk):
 
     def createTextBoxWidget(self):
         ttk.Label(self, text= "Quantum").place(x=610, y=78, width=100)
-        self.quantum_entry = Entry_int(self, width=5)
+        self.quantum_entry = ttk.Entry(
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S")
+)
         self.quantum_entry.place(x=590, y=95, width=100)
 
         ttk.Label(self, text= "Sobrecarga").place(x=605, y=118, width=100)
-        self.sobrecarga_entry = Entry_int(self, width=5)
+        self.sobrecarga_entry = ttk.Entry(
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         self.sobrecarga_entry.place(x=590, y=135, width=100)
         
     def createSlider(self):
@@ -321,23 +313,33 @@ class Simulador(Tk):
         newWindow.geometry("180x175")
 
         ttk.Label(newWindow, text= "Tempo de Execução: ").place(x=10,y=10, width=120)
-        exec_entry = Entry_int(newWindow, width=5)
+        exec_entry = ttk.Entry(master=newWindow, width=5,
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         exec_entry.place(x=130,y=10)
 
         ttk.Label(newWindow, text= "Tempo de Chegada: ").place(x=13,y=35, width=120)
-        chegada_entry = Entry_int(newWindow, width=5)
+        chegada_entry = ttk.Entry(master=newWindow,width=5,
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         chegada_entry.place(x=130,y=35)
 
         ttk.Label(newWindow, text= "Deadline: ").place(x=40,y=60, width=100)
-        deadline_entry = Entry_int(newWindow, width=5)
+        deadline_entry = ttk.Entry(master=newWindow,width=5,
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         deadline_entry.place(x=130,y=60)
 
         ttk.Label(newWindow, text= "Prioridade: ").place(x=35,y=85, width=100)
-        prioridade_entry = Entry_int(newWindow, width=5)
+        prioridade_entry = ttk.Entry(master=newWindow,width=5,
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         prioridade_entry.place(x=130,y=85)
 
         ttk.Label(newWindow, text= "Nº de Páginas: ").place(x=25,y=110, width=100)
-        pagina_entry = Entry_int(newWindow, width=5)
+        pagina_entry = ttk.Entry(master=newWindow,width=5,
+    validate="key",
+    validatecommand=(self.register(validate_entry), "%S"))
         pagina_entry.place(x=130,y=110)
 
         ttk.Button(newWindow, text="Criar", command=submit).place(x=100,y=140, width=70)
