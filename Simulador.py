@@ -53,12 +53,7 @@ class Simulador(Tk):
 
         self.cpu = Processador()   #como a cpu vai ser fixa podemos iniciar logo
         self.processos:deque[Processo] = deque()    #fila de processos que será capturada a partir da entrada do usuario
-        self.processos.append(Processo(0, 0, 4, 7, 1, 11))
-        self.processos.append(Processo(1, 2, 2, 5, 1, 8))
-        self.processos.append(Processo(2, 4,1, 8, 1,5))
-        self.processos.append(Processo(3, 6, 3, 10, 1, 10))
 
-        
         self.selected = []    #aqui ficara o conjunto de processos selecionados pelo usuario (o unico uso é excluir o processo)
         self.id = 0     #o contador unico para o ID dos processos
 
