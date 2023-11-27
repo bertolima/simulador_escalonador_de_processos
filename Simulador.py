@@ -238,15 +238,8 @@ class Simulador(Tk):
                 k+=1
 
         def turnaround():
-            def close_window():
-                turnaround_screen.destroy()
-
-            x = ( self.screen_width/2) - (40/2)
-            y = ( self.screen_height/2) - (40/2)
-            turnaround_screen = Toplevel(processWindow)
-            turnaround_screen.geometry('%dx%d+%d+%d' % (40, 40, x, y))
-            ttk.Label(turnaround_screen, text='Turnaround: '+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
-            ttk.Button(turnaround_screen, text="OK", command=close_window).pack(expand=True)
+            ttk.Label(processWindowFrame, text='Turnaround: '+ str(round(self.cpu.getTurnaround()/len(self.processos), 2)), foreground='red',
+          font=("Arial", 8) ).grid(row=0, column=0)
         
         #essa função é um chama ela novamente com um delay de 700ms
         #ela so continua a se chamar ate o tempo atual chegar no tempo maximo de execução dos processos
