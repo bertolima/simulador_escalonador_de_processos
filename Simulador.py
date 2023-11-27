@@ -80,11 +80,13 @@ class Simulador(Tk):
         algoritmos_processos = ["FIFO", "RoundRobin", "SJF", "EDF"]
         self.widgets['BOX_ALGORITMOS'] = ttk.Combobox(self, values=algoritmos_processos)
         self.widgets['BOX_ALGORITMOS'].place(x=590,y=180, width=100)
+        self.widgets['BOX_ALGORITMOS'].set('RoundRobin')
         
         Label(self, text="Paginação", width=11).place(x=598,y=210)
         algoritmos_paginacao = ["FIFO", "LRU"]
         self.widgets['BOX_PAGINAS'] = ttk.Combobox(self, values=algoritmos_paginacao)
-        self.widgets['BOX_PAGINAS'].place(x=590, y=230, width=100)        
+        self.widgets['BOX_PAGINAS'].place(x=590, y=230, width=100)
+        self.widgets['BOX_PAGINAS'].set('FIFO')      
 
     def createButtonsWidget(self):
         self.buttons['START'] = Button(self, text ="START", relief="raised",command=self.startAction)
@@ -145,6 +147,9 @@ class Simulador(Tk):
         self.diskLabels.clear()
 
         #captura a entrada do usuario sobre o quantum e sobrecarga
+        if (not self.quantum_entry.get().isdigit() or not self.sobrecarga_entry.get().isdigit() or len(self.processos) == 0):
+            self.buttons['START'].config(state=NORMAL)
+            return
         self.quantum = int(self.quantum_entry.get())
         self.sobrecarga = int(self.sobrecarga_entry.get())
 
@@ -165,11 +170,15 @@ class Simulador(Tk):
         processWindow.geometry('%dx%d+%d+%d' % (self.width, height, x- self.screen_width/5, y- self.screen_height/5 + 410))
         processWindow.title(" Visualização")
 
-        def on_closing():
+        def on_closing_processWindow():
+            self.buttons['START'].config(state=NORMAL)
+            processWindow.destroy()
+        
+        def on_closing_memoryWindow():
             self.buttons['START'].config(state=NORMAL)
             processWindow.destroy()
 
-        processWindow.protocol("WM_DELETE_WINDOW", on_closing)
+        processWindow.protocol("WM_DELETE_WINDOW", on_closing_processWindow)
 
         hframe = ttk.Frame(processWindow)
 
@@ -210,6 +219,7 @@ class Simulador(Tk):
         memoryWindow.title("RAM e Disco")
         memoryFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
         memoryFrame.pack(padx=3, pady=3)
+        memoryWindow.protocol("WM_DELETE_WINDOW", on_closing_memoryWindow)
         diskFrame = ttk.Frame(memoryWindow, borderwidth=1, relief="solid", )
         diskFrame.pack(padx=3, pady=3)
 
@@ -235,7 +245,7 @@ class Simulador(Tk):
             y = ( self.screen_height/2) - (40/2)
             turnaround_screen = Toplevel(processWindow)
             turnaround_screen.geometry('%dx%d+%d+%d' % (40, 40, x, y))
-            ttk.Label(turnaround_screen, text='Turnaround:'+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
+            ttk.Label(turnaround_screen, text='Turnaround: '+ str(round(self.cpu.getTurnaround()/len(self.processos), 2))).pack()
             ttk.Button(turnaround_screen, text="OK", command=close_window).pack(expand=True)
         
         #essa função é um chama ela novamente com um delay de 700ms

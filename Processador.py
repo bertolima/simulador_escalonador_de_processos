@@ -221,6 +221,7 @@ class Processador:
     def resetMemoryLabels(self):
         self.memoryLabels.clear()
         self.diskLabels.clear()
+        self.resetTurnaround()
 
     def getDiskLabels(self):
         return self.diskLabels
